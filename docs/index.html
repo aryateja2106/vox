@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vox — Talk to your terminal.</title>
+  <meta name="description" content="A CLI tool that translates plain English into shell commands. Local AI, no cloud, no API keys." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg2: #111111;
+      --bg3: #161616;
+      --border: #222222;
+      --text: #e0e0e0;
+      --muted: #888888;
+      --accent: #00d4ff;
+      --accent-dim: rgba(0, 212, 255, 0.12);
+      --accent-glow: rgba(0, 212, 255, 0.4);
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ─── NAV ──────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      font-family: var(--mono); font-weight: 700; font-size: 1.1rem;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 2rem; font-size: 0.875rem; color: var(--muted); }
+    .nav-links a { color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-github {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 0.35rem 0.9rem; border-radius: 6px;
+      font-size: 0.8rem; font-family: var(--mono); transition: border-color 0.2s;
+    }
+    .nav-github:hover { border-color: var(--accent); text-decoration: none; }
+
+    /* ─── SECTIONS ─────────────────────────────────── */
+    section { padding: 5rem 2rem; max-width: 900px; margin: 0 auto; }
+
+    .section-label {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700;
+      line-height: 1.2; margin-bottom: 1.5rem;
+    }
+
+    /* ─── HERO ─────────────────────────────────────── */
+    .hero {
+      padding: 6rem 2rem 4rem;
+      max-width: 900px; margin: 0 auto;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--accent);
+      border: 1px solid var(--accent); border-radius: 999px;
+      padding: 0.25rem 0.85rem; margin-bottom: 2rem;
+      background: var(--accent-dim);
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700; line-height: 1.1;
+      margin-bottom: 1.25rem; letter-spacing: -0.03em;
+    }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.125rem);
+      color: var(--muted); max-width: 580px; margin: 0 auto 3rem;
+    }
+
+    /* Terminal mockup */
+    .terminal {
+      background: #0d0d0d; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      max-width: 560px; margin: 0 auto 3rem;
+      box-shadow: 0 0 40px rgba(0,212,255,0.06), 0 20px 60px rgba(0,0,0,0.4);
+      text-align: left;
+    }
+    .terminal-bar {
+      background: #161616; padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .terminal-title {
+      flex: 1; text-align: center;
+      font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+    }
+    .terminal-body { padding: 1.2rem 1.4rem; font-family: var(--mono); font-size: 0.85rem; line-height: 1.9; }
+    .t-prompt { color: var(--accent); }
+    .t-input { color: var(--text); }
+    .t-cmd { color: var(--green); }
+    .t-ask { color: var(--yellow); }
+    .t-cursor {
+      display: inline-block; width: 8px; height: 1em;
+      background: var(--accent); vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Install tabs */
+    .install-box {
+      max-width: 560px; margin: 0 auto;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden;
+    }
+    .install-tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: 0.6rem 1.2rem; font-family: var(--mono); font-size: 0.75rem;
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; padding: 0.9rem 1.2rem; }
+    .tab-content.active { display: flex; align-items: center; gap: 0.75rem; }
+    .tab-content code {
+      font-family: var(--mono); font-size: 0.78rem; color: var(--text);
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .copy-btn {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--muted); font-family: var(--mono); font-size: 0.7rem;
+      padding: 0.3rem 0.7rem; border-radius: 4px; cursor: pointer;
+      transition: color 0.2s, border-color 0.2s; white-space: nowrap;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ─── PROBLEM ──────────────────────────────────── */
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr;
+      gap: 1rem; margin-top: 2rem;
+    }
+    .problem-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.2rem 1.4rem;
+      border-left: 3px solid var(--border);
+      transition: border-left-color 0.2s;
+    }
+    .problem-card:hover { border-left-color: var(--accent); }
+    .problem-card p { color: var(--muted); font-size: 0.95rem; }
+    .problem-card.highlight p { color: var(--text); font-style: italic; }
+    .problem-card.highlight { border-left-color: var(--accent); }
+
+    /* ─── HOW IT WORKS ─────────────────────────────── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .step {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.5rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .step-num {
+      font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em;
+      color: var(--accent); text-transform: uppercase;
+    }
+    .step h3 { font-size: 1.05rem; font-weight: 600; }
+    .step p { font-size: 0.875rem; color: var(--muted); }
+
+    /* ─── EXAMPLES TABLE ───────────────────────────── */
+    .table-wrap { overflow-x: auto; margin-top: 2rem; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg3); }
+    th {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 0.8rem 1.2rem; text-align: left;
+    }
+    td {
+      padding: 0.85rem 1.2rem; font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+    }
+    td:first-child { color: var(--text); font-style: italic; }
+    td:last-child { font-family: var(--mono); color: var(--green); font-size: 0.8rem; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ─── WHY VOX ──────────────────────────────────── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.4rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .card:hover { border-color: var(--accent); background: var(--bg3); }
+    .card-icon { font-size: 1.3rem; margin-bottom: 0.6rem; }
+    .card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .card p { font-size: 0.82rem; color: var(--muted); }
+
+    /* ─── USAGE ────────────────────────────────────── */
+    .code-block {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.4rem 1.6rem;
+      font-family: var(--mono); font-size: 0.82rem;
+      line-height: 2; margin-top: 2rem; overflow-x: auto;
+    }
+    .code-block .comment { color: var(--muted); }
+    .code-block .cmd-key { color: var(--accent); }
+    .code-block .cmd-arg { color: var(--green); }
+
+    /* ─── CTA ──────────────────────────────────────── */
+    .cta-section {
+      text-align: center; padding: 5rem 2rem;
+      max-width: 900px; margin: 0 auto;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { margin-bottom: 1rem; }
+    .cta-section p { color: var(--muted); margin-bottom: 2.5rem; }
+    .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--accent); color: #000; font-weight: 600;
+      font-family: var(--mono); font-size: 0.85rem;
+      padding: 0.7rem 1.5rem; border-radius: 7px;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px var(--accent-glow); text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--bg2); color: var(--text);
+      border: 1px solid var(--border);
+      font-family: var(--mono); font-size: 0.85rem;
+      padding: 0.7rem 1.5rem; border-radius: 7px;
+      transition: border-color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); text-decoration: none; }
+
+    /* ─── FOOTER ───────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem; text-align: center;
+      font-size: 0.82rem; color: var(--muted);
+      font-family: var(--mono);
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--accent); }
+
+    /* ─── DIVIDER ──────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); max-width: 900px; margin: 0 auto; }
+
+    /* ─── RESPONSIVE ───────────────────────────────── */
+    @media (max-width: 600px) {
+      nav { padding: 0 1rem; }
+      .nav-links { display: none; }
+      section, .hero, .cta-section { padding-left: 1.2rem; padding-right: 1.2rem; }
+      .steps { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .terminal-body { font-size: 0.75rem; }
+      .tab-content code { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">vo<span>x</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#how">How it works</a>
+    <a href="#examples">Examples</a>
+    <a href="#why">Why Vox</a>
+  </div>
+  <a href="https://github.com/aryateja2106/vox" class="nav-github" target="_blank" rel="noopener">
+    &#9733; Star on GitHub
+  </a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">Open Source</div>
+  <h1>Talk to your terminal.</h1>
+  <p>A terminal interface that translates plain English into shell commands. No cloud. No API keys. Just a local model that understands what you mean.</p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <div class="terminal-title">vox</div>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-prompt">vox &gt;</span> <span class="t-input">find all python files bigger than 1MB</span></div>
+      <div><span class="t-cmd">find . -name "*.py" -size +1M -type f</span></div>
+      <div><span class="t-ask">Run it? [Y/n/c]</span> <span class="t-input">y</span><span class="t-cursor"></span></div>
+    </div>
+  </div>
+
+  <div class="install-box">
+    <div class="install-tabs">
+      <button class="tab-btn active" onclick="switchTab('install', this)">Install</button>
+      <button class="tab-btn" onclick="switchTab('uninstall', this)">Uninstall</button>
+    </div>
+    <div id="tab-install" class="tab-content active">
+      <code>curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/install.sh | bash</code>
+      <button class="copy-btn" onclick="copyCmd('install')">Copy</button>
+    </div>
+    <div id="tab-uninstall" class="tab-content">
+      <code>curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/uninstall.sh | bash</code>
+      <button class="copy-btn" onclick="copyCmd('uninstall')">Copy</button>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-label">The Problem</div>
+  <h2>The terminal is the most powerful tool on your computer. And the most intimidating.</h2>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <p>You know what you want to do. You just don't remember the exact syntax. Is it <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">find -mtime</code> or <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">find -newer</code>? Is the flag <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">-r</code> or <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">-R</code>? Does <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">kill</code> take a port or a PID?</p>
+    </div>
+    <div class="problem-card">
+      <p>Today, you either Google it — breaking your flow — ask ChatGPT and pay by the token, or wade through man pages written for the 1970s.</p>
+    </div>
+    <div class="problem-card">
+      <p>Every senior engineer has a cheat sheet. Every terminal power user has muscle memory built over years. That knowledge shouldn't be locked behind experience.</p>
+    </div>
+    <div class="problem-card highlight">
+      <p>What if your terminal just... understood you?</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">How It Works</div>
+  <h2>Three steps. That's it.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">Step 01</div>
+      <h3>You speak</h3>
+      <p>Type — or say — what you want in plain English. No special syntax. No command structure. Just describe the outcome.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 02</div>
+      <h3>Vox translates</h3>
+      <p>A local model under 1B parameters converts your words to the exact shell command for your system. Runs entirely on-device.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 03</div>
+      <h3>You decide</h3>
+      <p>Review the command before anything runs. Hit Y to execute, N to skip, or C to copy it to your clipboard. Always in control.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- EXAMPLES -->
+<section id="examples">
+  <div class="section-label">Examples</div>
+  <h2>What you say — what you get.</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>What you say</th>
+          <th>What Vox gives you</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>"find all python files"</td><td>find . -name "*.py"</td></tr>
+        <tr><td>"what's running on port 3000"</td><td>lsof -ti:3000</td></tr>
+        <tr><td>"show disk usage sorted by size"</td><td>du -sh * | sort -rh | head -20</td></tr>
+        <tr><td>"start the docker compose stack"</td><td>docker compose up -d</td></tr>
+        <tr><td>"kill the process on port 8080"</td><td>lsof -ti:8080 | xargs kill</td></tr>
+        <tr><td>"compress this folder"</td><td>tar czf archive.tar.gz .</td></tr>
+        <tr><td>"show my git changes"</td><td>git diff --stat</td></tr>
+        <tr><td>"what's my public IP"</td><td>curl -s ifconfig.me</td></tr>
+        <tr><td>"list files changed in the last hour"</td><td>find . -mmin -60 -type f</td></tr>
+        <tr><td>"search for 'TODO' in all js files"</td><td>grep -r "TODO" --include="*.js" .</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- WHY VOX -->
+<section id="why">
+  <div class="section-label">Why Vox</div>
+  <h2>Built differently. On purpose.</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">&#128274;</div>
+      <h3>100% Local</h3>
+      <p>Runs entirely on your machine. Nothing leaves your terminal. No telemetry, no cloud calls, no one watching your commands.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#9889;</div>
+      <h3>Tiny Model</h3>
+      <p>Under 1B parameters. Fits on any laptop with room to spare. No discrete GPU needed — runs on CPU.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#128230;</div>
+      <h3>One Curl Install</h3>
+      <p>A single <code style="color:var(--accent);font-family:var(--mono);font-size:0.85em">curl | bash</code> and you're done. No npm, no Docker, no creating yet another account.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#127968;</div>
+      <h3>Platform Smart</h3>
+      <p>Detects macOS vs Linux automatically. Gives you the right flag, the right tool, for your exact system.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#127908;</div>
+      <h3>Voice Ready</h3>
+      <p>Built for voice input from day one. Talk to your terminal the way you'd describe a task to a colleague.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#128279;</div>
+      <h3>Open Source</h3>
+      <p>MIT licensed. The model weights are public. Fork it, retrain it, embed it in your own tool. It's yours.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- USAGE -->
+<section id="usage">
+  <div class="section-label">Usage</div>
+  <h2>Three ways to use it.</h2>
+  <div class="code-block">
+    <div><span class="comment"># Interactive REPL — keep it open, keep asking</span></div>
+    <div><span class="cmd-key">vox</span></div>
+    <div>&nbsp;</div>
+    <div><span class="comment"># One-shot — translate a single request</span></div>
+    <div><span class="cmd-key">vox</span> <span class="cmd-arg">"find all log files from today"</span></div>
+    <div>&nbsp;</div>
+    <div><span class="comment"># Auto-execute — skip the prompt, run immediately</span></div>
+    <div><span class="cmd-key">vox</span> <span class="cmd-arg">-x "show free disk space"</span></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Your terminal, finally fluent.</h2>
+  <p>Install in under 10 seconds. No setup. No config. No excuses.</p>
+  <div class="btn-group">
+    <a href="https://github.com/aryateja2106/vox" class="btn-primary" target="_blank" rel="noopener">
+      &#9733; Star on GitHub
+    </a>
+    <a href="#" class="btn-secondary" onclick="document.querySelector('.install-box').scrollIntoView({behavior:'smooth'});return false;">
+      Get Started
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    <a href="https://github.com/aryateja2106/vox" target="_blank" rel="noopener">github.com/aryateja2106/vox</a>
+    &nbsp;&mdash;&nbsp;
+    Built by <a href="https://github.com/aryateja2106" target="_blank" rel="noopener">Arya Teja</a>.
+    Powered by <a href="https://huggingface.co/AryaYT/nl2shell-0.8b" target="_blank" rel="noopener">NL2Shell</a>.
+  </p>
+</footer>
+
+<script>
+  const cmds = {
+    install:   'curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/install.sh | bash',
+    uninstall: 'curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/uninstall.sh | bash'
+  };
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  function copyCmd(name) {
+    navigator.clipboard.writeText(cmds[name]).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      btn.style.color = 'var(--accent)';
+      setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 1800);
+    });
+  }
+</script>
+</body>
+</html>
