@@ -40,11 +40,26 @@ def get_platform() -> str:
 def clean_response(text: str) -> str:
     """Strip common LLM artifacts from the response."""
     text = text.strip()
-    # Remove markdown code fences
+    # Remove markdown code fences (```bash ... ```)
     text = re.sub(r"^```(?:bash|sh|shell|zsh)?\n?", "", text)
     text = re.sub(r"\n?```$", "", text)
+    # Remove inline backticks (`command`)
+    if text.startswith("`") and text.endswith("`") and text.count("`") == 2:
+        text = text[1:-1]
     # Remove leading $ or > prompt characters
     text = re.sub(r"^[$>]\s*", "", text)
+    # Remove "Here is the command:" style preambles
+    text = re.sub(
+        r"^(?:Here (?:is|are) (?:the )?(?:command|script)s?:?\s*\n?)",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    # Strip leading comment lines (# ...) that precede the actual command
+    lines = text.strip().split("\n")
+    while lines and lines[0].strip().startswith("#"):
+        lines.pop(0)
+    text = "\n".join(lines)
     return text.strip()
 
 
