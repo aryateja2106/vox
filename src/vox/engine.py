@@ -14,7 +14,7 @@ SYSTEM_PROMPT = (
     "No explanations, no markdown, no code fences, no comments. Just the raw command."
 )
 
-DEFAULT_MODEL = "nl2shell"
+DEFAULT_MODEL = "qwen2.5-coder:0.5b"
 DEFAULT_API_URL = "http://localhost:11434"
 
 
@@ -127,14 +127,24 @@ def translate(query: str) -> str | None:
         return None
 
 
-def check_ollama() -> bool:
-    """Check if Ollama is running and the model is available."""
+def check_ollama() -> str:
+    """Check if Ollama is running and the model is available.
+
+    Returns:
+        "ready" — Ollama running and model available
+        "no_model" — Ollama running but model not pulled
+        "no_ollama" — Ollama not reachable
+    """
     api_url = get_api_url()
     try:
         r = httpx.get(f"{api_url}/api/tags", timeout=5.0)
         r.raise_for_status()
         models = [m["name"] for m in r.json().get("models", [])]
         model = get_model()
-        return any(m == model or m.startswith(f"{model}:") for m in models)
+        if any(m == model or m.startswith(f"{model}:") for m in models):
+            return "ready"
+        return "no_model"
+    except httpx.ConnectError:
+        return "no_ollama"
     except Exception:
-        return False
+        return "no_ollama"

@@ -59,13 +59,16 @@ echo ""
 if command -v ollama &>/dev/null; then
     echo -e "  ${GREEN}✓${NC} Ollama detected"
 
-    # Try to pull the nl2shell model
-    if ollama list 2>/dev/null | grep -q "nl2shell"; then
-        echo -e "  ${GREEN}✓${NC} nl2shell model ready"
+    # Check for a suitable model
+    if ollama list 2>/dev/null | grep -q "qwen2.5-coder"; then
+        echo -e "  ${GREEN}✓${NC} qwen2.5-coder model ready"
     else
-        echo -e "  ${YELLOW}!${NC} nl2shell model not found locally"
-        echo -e "  ${DIM}  When available, pull with: ollama pull nl2shell${NC}"
-        echo -e "  ${DIM}  For now, use any model: vox --model llama3.2${NC}"
+        echo -e "  ${YELLOW}!${NC} Pulling default model (qwen2.5-coder:0.5b — 394MB)..."
+        if ollama pull qwen2.5-coder:0.5b 2>/dev/null; then
+            echo -e "  ${GREEN}✓${NC} Model ready"
+        else
+            echo -e "  ${DIM}  Pull it manually: ollama pull qwen2.5-coder:0.5b${NC}"
+        fi
     fi
 else
     echo -e "  ${YELLOW}!${NC} Ollama not found"

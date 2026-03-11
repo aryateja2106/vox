@@ -3,18 +3,34 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import os
 import re
+import readline
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 from rich.console import Console
 from rich.syntax import Syntax
 from rich.text import Text
 
 from vox import __version__
-from vox.engine import check_ollama, translate
+from vox.engine import check_ollama, get_model, translate
+
+HISTORY_FILE = Path.home() / ".vox_history"
+
+
+def setup_history() -> None:
+    """Load command history and register save-on-exit."""
+    try:
+        if HISTORY_FILE.exists():
+            readline.read_history_file(HISTORY_FILE)
+        readline.set_history_length(1000)
+        atexit.register(readline.write_history_file, str(HISTORY_FILE))
+    except OSError:
+        pass
 
 console = Console()
 
@@ -179,6 +195,8 @@ def handle_command(query: str, auto_execute: bool = False) -> None:
 
 def repl() -> None:
     """Interactive REPL mode."""
+    setup_history()
+
     console.print(
         Text.assemble(
             ("vox", "bold cyan"),
@@ -188,11 +206,18 @@ def repl() -> None:
     )
     console.print("[dim]Type what you want to do. Ctrl+C to exit.[/dim]")
 
-    if not check_ollama():
+    model = get_model()
+    status = check_ollama()
+    if status == "no_ollama":
         console.print(
-            "[yellow]Warning: Ollama not reachable or model not found.[/yellow]\n"
-            "[dim]Start Ollama: ollama serve[/dim]\n"
-            f"[dim]Pull model:   ollama pull {os.environ.get('VOX_MODEL', 'nl2shell')}[/dim]"
+            "\n[yellow]Ollama is not running.[/yellow]\n"
+            "[dim]  Install: https://ollama.ai[/dim]\n"
+            "[dim]  Start:   ollama serve[/dim]"
+        )
+    elif status == "no_model":
+        console.print(
+            f"\n[yellow]Model '{model}' not found locally.[/yellow]\n"
+            f"[dim]  Pull it: ollama pull {model}[/dim]"
         )
     console.print()
 
@@ -247,7 +272,7 @@ def main() -> None:
         "--model",
         "-m",
         default=None,
-        help="Ollama model name (default: nl2shell)",
+        help="Ollama model name (default: qwen2.5-coder:0.5b)",
     )
     parser.add_argument(
         "--execute",

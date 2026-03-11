@@ -1,6 +1,6 @@
 [project]
 name = "vox-shell"
-version = "0.1.0"
+version = "0.2.0"
 description = "Talk to your terminal. Natural language to shell commands, powered by a local AI model."
 readme = "README.md"
 license = "MIT"
