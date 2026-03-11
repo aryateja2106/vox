@@ -92,7 +92,16 @@ def translate(query: str) -> str | None:
         data = response.json()
         raw = data.get("message", {}).get("content", "")
         cmd = clean_response(raw)
+
+        # Hard limit on response length
+        if cmd and len(cmd) > 1000:
+            print("  Response too long — likely not a single command.", file=sys.stderr)
+            return None
+
         return cmd if cmd else None
+
+    except KeyboardInterrupt:
+        return None
 
     except httpx.ConnectError:
         print(
@@ -126,6 +135,6 @@ def check_ollama() -> bool:
         r.raise_for_status()
         models = [m["name"] for m in r.json().get("models", [])]
         model = get_model()
-        return any(model in m for m in models)
+        return any(m == model or m.startswith(f"{model}:") for m in models)
     except Exception:
         return False
