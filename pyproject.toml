@@ -1,0 +1,52 @@
+[project]
+name = "vox-shell"
+version = "0.1.0"
+description = "Talk to your terminal. Natural language to shell commands, powered by a local AI model."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Arya Teja" }]
+keywords = ["shell", "terminal", "natural-language", "ai", "cli", "voice", "bash", "ollama"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Shells",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "httpx>=0.24",
+    "rich>=13.0",
+]
+
+[project.scripts]
+vox = "vox.cli:main"
+
+[project.urls]
+Homepage = "https://aryateja2106.github.io/vox"
+Repository = "https://github.com/aryateja2106/vox"
+Issues = "https://github.com/aryateja2106/vox/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vox"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "B", "S", "T20", "SIM", "RUF"]
+ignore = ["T201", "S101", "S602", "S603", "S607", "E501", "S108"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
