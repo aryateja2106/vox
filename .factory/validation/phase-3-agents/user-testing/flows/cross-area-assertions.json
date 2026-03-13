@@ -1,0 +1,79 @@
+{
+  "groupId": "cross-area-assertions",
+  "testedAt": "2026-03-13T00:00:00Z",
+  "isolation": {
+    "repo": "/Users/aryateja/Projects/vox",
+    "sharedState": "none",
+    "services": "none"
+  },
+  "toolsUsed": ["Execute (pytest, ruff, git diff)"],
+  "assertions": [
+    {
+      "id": "VAL-CROSS-001",
+      "title": "CLI agent subcommand flows through router to wrapper",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run uv run pytest tests/test_wrappers.py::TestCLIAgentIntegrationFlow -v --tb=short",
+          "expected": "Both tests pass (test_refactor_task_flows_through_heuristic_to_wrapper, test_research_task_flows_through_heuristic_to_gemini)",
+          "observed": "2 passed in 0.03s — both test_refactor_task_flows_through_heuristic_to_wrapper and test_research_task_flows_through_heuristic_to_gemini PASSED"
+        }
+      ],
+      "evidence": {
+        "terminalOutput": "phase-3-agents/cross-area-assertions/VAL-CROSS-001-pytest-output.txt"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-003",
+      "title": "Full test suite passes",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run uv run pytest tests/ -v",
+          "expected": "All 169 tests pass with 0 failures",
+          "observed": "169 passed in 0.16s — 0 failures, 0 errors, 0 skipped"
+        }
+      ],
+      "evidence": {
+        "terminalOutput": "phase-3-agents/cross-area-assertions/VAL-CROSS-003-full-suite.txt"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-004",
+      "title": "Ruff check passes",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run uv run ruff check src/",
+          "expected": "No errors reported, exit code 0",
+          "observed": "All checks passed! Exit code 0"
+        }
+      ],
+      "evidence": {
+        "terminalOutput": "phase-3-agents/cross-area-assertions/VAL-CROSS-004-ruff-output.txt"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-005",
+      "title": "Existing tests unmodified",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run git diff tests/test_engine.py tests/test_config.py tests/test_agents.py tests/test_voice.py",
+          "expected": "Empty output (no modifications to existing test files)",
+          "observed": "Empty output — no modifications detected. Exit code 0"
+        }
+      ],
+      "evidence": {
+        "terminalOutput": "phase-3-agents/cross-area-assertions/VAL-CROSS-005-git-diff.txt"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 4 assertions: 4 passed, 0 failed. VAL-CROSS-001 (integration flow) 2/2 tests pass, VAL-CROSS-003 (full suite) 169/169 pass, VAL-CROSS-004 (ruff) clean, VAL-CROSS-005 (existing tests) unmodified."
+}

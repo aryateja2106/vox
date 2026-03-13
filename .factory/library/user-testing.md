@@ -60,6 +60,64 @@ All CLI assertions are validated through **unit tests** (not live CLI invocation
 - VAL-CLI-018 → test_agent_use_flag_sets_env
 - VAL-CLI-019 → test_config_edit_launches_editor, test_config_edit_creates_config_if_missing, test_config_edit_defaults_to_nano
 
+## Flow Validator Guidance: Router
+
+All Router assertions (VAL-RTR-*) are validated through **unit tests** in `tests/test_router.py`.
+
+**How to validate:**
+1. Run `uv run pytest tests/test_router.py -v --tb=short` to verify router tests pass
+2. For each assertion, map to specific test function(s) and verify they pass
+
+**Isolation:** No shared state. All tests use mocks. Multiple validators can run concurrently.
+
+**Assertion-to-test mapping:**
+- VAL-RTR-001 → TestHeuristicCodingKeywords::test_refactor_routes_to_coding_agent, test_code_routes_to_coding_agent, test_fix_routes_to_coding_agent, test_debug_routes_to_coding_agent, test_implement_routes_to_coding_agent
+- VAL-RTR-002 → TestHeuristicResearchKeywords::test_research_routes_to_gemini, test_search_routes_to_gemini, test_summarize_routes_to_gemini
+- VAL-RTR-003 → TestCaseInsensitiveMatching::test_uppercase_refactor_matches, test_mixed_case_research_matches, test_uppercase_fix_matches
+- VAL-RTR-004 → TestLLMFallback::test_no_keyword_triggers_llm_fallback
+- VAL-RTR-005 → TestLLMFallback::test_llm_valid_response_selects_agent
+- VAL-RTR-006 → TestLLMFallback::test_llm_garbage_falls_back_to_preferred, test_llm_none_falls_back_to_preferred
+- VAL-RTR-007 → TestNoAgents::test_no_agents_returns_message
+- VAL-RTR-008 → TestSingleAgent::test_single_agent_used_directly
+- VAL-RTR-009 → TestForceAgent::test_force_agent_overrides_heuristic, test_force_agent_via_env_var
+- VAL-RTR-010 → TestAutoRouteDisabled::test_auto_route_false_uses_preferred
+- VAL-RTR-011 → TestHeuristicPriorityOverLLM::test_heuristic_match_skips_llm_with_multiple_agents
+- VAL-RTR-012 → TestAgentDiscovery::test_discovers_selective_agents, test_discovers_all_agents
+- VAL-RTR-013 → TestOutputFormatting::test_success_shows_agent_and_output, test_failure_shows_error, test_empty_output_shows_completed
+- VAL-RTR-014 → TestWordBoundaryMatching::test_fix_does_not_match_prefix, test_fix_does_not_match_suffix, test_code_does_not_match_barcode, test_search_does_not_match_researcher
+- VAL-RTR-015 → TestConflictingKeywords::test_coding_priority_over_research, test_implement_beats_summarize
+- VAL-RTR-016 → TestForceAgentUnavailable::test_force_agent_unavailable_falls_through
+
+## Flow Validator Guidance: Wrappers
+
+All Wrapper assertions (VAL-WRAP-*) are validated through **unit tests** in `tests/test_wrappers.py`.
+
+**How to validate:**
+1. Run `uv run pytest tests/test_wrappers.py -v --tb=short` to verify wrapper tests pass
+2. For each assertion, map to specific test function(s) and verify they pass
+
+**Isolation:** No shared state. All tests use mocks. Multiple validators can run concurrently.
+
+**Assertion-to-test mapping:**
+- VAL-WRAP-001 → TestAgentResultDataclass::test_stores_all_explicit_fields, test_exit_code_defaults_to_zero, test_error_defaults_to_none, test_defaults_together
+- VAL-WRAP-002 → TestExecTimeoutHandling::test_timeout_returns_exit_code_124, test_timeout_returns_timed_out_error, test_timeout_returns_empty_output
+- VAL-WRAP-003 → TestExecFileNotFoundHandling::test_file_not_found_returns_exit_code_127, test_file_not_found_error_contains_binary_name, test_file_not_found_returns_empty_output
+- VAL-WRAP-004 → TestClaudeCommandConstruction, TestCodexCommandConstruction, TestGeminiCommandConstruction, TestAmpCommandConstruction, TestDroidCommandConstruction
+- VAL-WRAP-005 → TestAllAgentsAttributes::test_all_agents_have_non_empty_name, test_all_agents_have_non_empty_binary, test_all_agents_have_non_empty_description
+- VAL-WRAP-006 → TestExecNonZeroExitWithStderr::test_nonzero_exit_captures_returncode, test_nonzero_exit_captures_stderr, test_nonzero_exit_captures_stdout
+
+## Flow Validator Guidance: Cross-Area
+
+Cross-area assertions (VAL-CROSS-*) are validated through a mix of tests, lint, and git checks.
+
+**How to validate:**
+- VAL-CROSS-001 → TestCLIAgentIntegrationFlow in `tests/test_wrappers.py` (test_refactor_task_flows_through_heuristic_to_wrapper, test_research_task_flows_through_heuristic_to_gemini)
+- VAL-CROSS-003 → Run `uv run pytest tests/ -v` — all tests must pass with 0 failures
+- VAL-CROSS-004 → Run `uv run ruff check src/` — must report no errors
+- VAL-CROSS-005 → Run `git diff tests/test_engine.py tests/test_config.py tests/test_agents.py tests/test_voice.py` — must be empty (no modifications)
+
+**Isolation:** No shared state. Can run concurrently with other validators.
+
 ## Flow Validator Guidance: Provider
 
 All Provider assertions are validated through **unit tests** in `tests/test_provider.py`, plus backward-compatibility checks through `tests/test_engine.py` and `tests/test_config.py`.
