@@ -1,0 +1,45 @@
+{
+  "featureId": "wrapper-robustness-tests",
+  "reviewedAt": "2026-03-13T12:10:00.000Z",
+  "commitId": "ad7fd21",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "tests/test_wrappers.py adds 30 well-structured tests across 11 classes covering all required validation assertions (VAL-WRAP-001 through VAL-WRAP-006, VAL-CROSS-001, VAL-CROSS-003/004/005). Tests are pure unit tests using unittest.mock.patch, follow project conventions (from __future__ import annotations, descriptive test names, one behavior per test), and correctly validate the existing BaseAgent._exec error handling, AgentResult dataclass, all 5 wrapper command constructions, ALL_AGENTS attribute completeness, and integration flow through the heuristic router. All 169 tests pass, ruff is clean for the new file, and no existing test files were modified.",
+    "issues": [
+      {
+        "file": "tests/test_wrappers.py",
+        "line": 79,
+        "severity": "non_blocking",
+        "description": "test_file_not_found_error_contains_binary_name calls BaseAgent._exec() directly where cls.binary is '' (BaseAgent's default). The error message becomes ' not found' (empty binary + ' not found'). The test passes because it checks 'not found' in result.error.lower(), but it doesn't actually verify the binary name is present. Calling through a concrete wrapper (e.g., ClaudeAgent) or asserting the full error string would make this test more precise."
+      },
+      {
+        "file": "tests/test_wrappers.py",
+        "line": 248,
+        "severity": "non_blocking",
+        "description": "Integration tests import route_and_run and VoxConfig inside the test function body rather than at module level. This works correctly and avoids potential import-time side effects, but is stylistically inconsistent with the rest of the file which uses top-level imports. Minor style concern only."
+      },
+      {
+        "file": "tests/test_wrappers.py",
+        "line": 92,
+        "severity": "non_blocking",
+        "description": "Non-zero exit tests use MagicMock for subprocess.CompletedProcess. While this works because MagicMock.stdout/stderr returns the assigned strings and .strip() works on them, using a real subprocess.CompletedProcess(args=[], returncode=2, stdout='...', stderr='...') or a SimpleNamespace would be more explicit and less reliant on mock magic."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The TDD worker skill's Red phase instructs 'Verify they FAIL (Red phase). If they pass without implementation, the tests are testing the wrong thing.' For test-only features that test already-implemented code, all tests pass immediately. The worker acknowledged this in skillFeedback and suggested the skill clarify this case. The skill could add guidance like: 'For test-only features validating existing code, the Red phase is writing the tests and the Green phase is confirming they pass against the existing implementation.'",
+      "evidence": "Worker transcript skeleton shows skillFeedback.suggestedChanges: 'The TDD skill says to verify tests FAIL first (Red phase), but for test-only features testing existing code, the tests should pass immediately.' .factory/skills/tdd-worker/SKILL.md Step 2.4: 'Verify they FAIL (Red phase). If they pass without implementation, the tests are testing the wrong thing — fix the tests.'"
+    },
+    {
+      "area": "conventions",
+      "observation": "Worker reported pre-existing ruff violations in tests/test_provider.py and tests/test_router.py (I001 import ordering, F401 unused imports, B011 assert False, SIM117 nested with). These are from previous workers and not introduced by this feature, but indicate a gap in pre-commit enforcement or CI lint checks for test files.",
+      "evidence": "Handoff discoveredIssues: '11 total ruff errors in those files'. services.yaml lint command only checks src/: 'lint: uv run ruff check src/' — tests are excluded from the lint command."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. tests/test_wrappers.py adds 30 comprehensive tests (exceeding the 10+ requirement) across 11 well-organized classes. All validation assertions are fully covered: AgentResult dataclass (VAL-WRAP-001, 4 tests), _exec timeout handling (VAL-WRAP-002, 3 tests), _exec FileNotFoundError (VAL-WRAP-003, 3 tests), non-zero exit with stderr (VAL-WRAP-006, 4 tests), command construction for all 5 wrappers (VAL-WRAP-004, 11 tests), ALL_AGENTS attributes (VAL-WRAP-005, 4 tests), and integration flow through heuristic router (VAL-CROSS-001, 2 tests). Full suite passes (169/169), ruff clean, test_agents.py unmodified. Three non-blocking style issues noted: misleading test name for FileNotFoundError binary check, in-function imports in integration tests, and MagicMock used where real objects would be clearer."
+}
