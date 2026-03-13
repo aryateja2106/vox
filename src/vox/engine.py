@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-import os
 import re
 import sys
+from typing import TYPE_CHECKING
 
 import httpx
+
+if TYPE_CHECKING:
+    from vox.config import VoxConfig
 
 SYSTEM_PROMPT = (
     "You are an expert shell programmer on {platform}. "
@@ -18,16 +21,7 @@ DEFAULT_MODEL = "qwen2.5-coder:0.5b"
 DEFAULT_API_URL = "http://localhost:11434"
 
 
-def get_model() -> str:
-    return os.environ.get("VOX_MODEL", DEFAULT_MODEL)
-
-
-def get_api_url() -> str:
-    return os.environ.get("VOX_API_URL", DEFAULT_API_URL)
-
-
 def get_platform() -> str:
-    """Detect platform for context-aware prompting."""
     if sys.platform == "darwin":
         return "macOS"
     elif sys.platform == "linux":
@@ -40,22 +34,17 @@ def get_platform() -> str:
 def clean_response(text: str) -> str:
     """Strip common LLM artifacts from the response."""
     text = text.strip()
-    # Remove markdown code fences (```bash ... ```)
     text = re.sub(r"^```(?:bash|sh|shell|zsh)?\n?", "", text)
     text = re.sub(r"\n?```$", "", text)
-    # Remove inline backticks (`command`)
     if text.startswith("`") and text.endswith("`") and text.count("`") == 2:
         text = text[1:-1]
-    # Remove leading $ or > prompt characters
     text = re.sub(r"^[$>]\s*", "", text)
-    # Remove "Here is the command:" style preambles
     text = re.sub(
         r"^(?:Here (?:is|are) (?:the )?(?:command|script)s?:?\s*\n?)",
         "",
         text,
         flags=re.IGNORECASE,
     )
-    # Strip leading comment lines (# ...) that precede the actual command
     lines = text.strip().split("\n")
     while lines and lines[0].strip().startswith("#"):
         lines.pop(0)
@@ -63,10 +52,14 @@ def clean_response(text: str) -> str:
     return text.strip()
 
 
-def translate(query: str) -> str | None:
-    """Translate natural language to a shell command using Ollama."""
-    model = get_model()
-    api_url = get_api_url()
+def translate(query: str, cfg: VoxConfig | None = None) -> str | None:
+    """Translate natural language to a shell command using the configured provider."""
+    if cfg is None:
+        from vox.config import VoxConfig
+        cfg = VoxConfig()
+
+    model = cfg.model.name
+    api_url = cfg.model.api_url
     platform = get_platform()
 
     payload = {
@@ -77,7 +70,7 @@ def translate(query: str) -> str | None:
         ],
         "stream": False,
         "options": {
-            "temperature": 0.1,
+            "temperature": cfg.model.temperature,
             "num_predict": 256,
         },
     }
@@ -93,7 +86,6 @@ def translate(query: str) -> str | None:
         raw = data.get("message", {}).get("content", "")
         cmd = clean_response(raw)
 
-        # Hard limit on response length
         if cmd and len(cmd) > 1000:
             print("  Response too long — likely not a single command.", file=sys.stderr)
             return None
@@ -127,20 +119,49 @@ def translate(query: str) -> str | None:
         return None
 
 
-def check_ollama() -> str:
-    """Check if Ollama is running and the model is available.
+def query_llm(prompt: str, cfg: VoxConfig | None = None, system: str | None = None) -> str | None:
+    """General-purpose LLM query (used by agent router, etc.)."""
+    if cfg is None:
+        from vox.config import VoxConfig
+        cfg = VoxConfig()
 
-    Returns:
-        "ready" — Ollama running and model available
-        "no_model" — Ollama running but model not pulled
-        "no_ollama" — Ollama not reachable
-    """
-    api_url = get_api_url()
+    model = cfg.model.name
+    api_url = cfg.model.api_url
+
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"temperature": 0.1, "num_predict": 256},
+    }
+
+    try:
+        response = httpx.post(f"{api_url}/api/chat", json=payload, timeout=30.0)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("message", {}).get("content", "").strip() or None
+    except Exception:
+        return None
+
+
+def check_ollama(cfg: VoxConfig | None = None) -> str:
+    """Check if Ollama is running and the model is available."""
+    if cfg is None:
+        from vox.config import VoxConfig
+        cfg = VoxConfig()
+
+    api_url = cfg.model.api_url
+    model = cfg.model.name
+
     try:
         r = httpx.get(f"{api_url}/api/tags", timeout=5.0)
         r.raise_for_status()
         models = [m["name"] for m in r.json().get("models", [])]
-        model = get_model()
         if any(m == model or m.startswith(f"{model}:") for m in models):
             return "ready"
         return "no_model"
