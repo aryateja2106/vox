@@ -29,7 +29,10 @@ CURATED_EXAMPLES = [
     ("detach from current tmux session", "tmux detach-client"),
     ("rename current tmux window to editor", "tmux rename-window editor"),
     ("switch to tmux window 2", "tmux select-window -t 2"),
-    ("create tmux session named droid and start in ~/Projects", "tmux new-session -s droid -c ~/Projects"),
+    (
+        "create tmux session named droid and start in ~/Projects",
+        "tmux new-session -s droid -c ~/Projects",
+    ),
     # git
     ("show git log as one line per commit", "git log --oneline"),
     ("create a new branch called feature-auth", "git checkout -b feature-auth"),
@@ -59,14 +62,20 @@ CURATED_EXAMPLES = [
     ("apply kubernetes config from deploy.yaml", "kubectl apply -f deploy.yaml"),
     ("delete pod named crashed-pod", "kubectl delete pod crashed-pod"),
     ("scale deployment api to 3 replicas", "kubectl scale deployment api --replicas=3"),
-    ("port forward pod api-server to local port 8080", "kubectl port-forward pod/api-server 8080:8080"),
+    (
+        "port forward pod api-server to local port 8080",
+        "kubectl port-forward pod/api-server 8080:8080",
+    ),
     # file operations
     ("find all python files in current directory", "find . -name '*.py' -type f"),
     ("count lines in all python files", "find . -name '*.py' | xargs wc -l"),
     ("find files larger than 100MB", "find . -size +100M -type f"),
     ("compress directory src into archive", "tar -czf src.tar.gz src/"),
     ("extract tar.gz file", "tar -xzf archive.tar.gz"),
-    ("find and replace foo with bar in all py files", "find . -name '*.py' -exec sed -i '' 's/foo/bar/g' {} +"),
+    (
+        "find and replace foo with bar in all py files",
+        "find . -name '*.py' -exec sed -i '' 's/foo/bar/g' {} +",
+    ),
     ("show disk usage of current directory", "du -sh ."),
     ("show disk space on all drives", "df -h"),
     ("watch a file for changes", "tail -f /var/log/syslog"),

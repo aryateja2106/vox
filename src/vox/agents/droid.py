@@ -11,6 +11,6 @@ class DroidAgent(BaseAgent):
     description = "Factory Droid — best for complex multi-step engineering tasks"
 
     @classmethod
-    def run(cls, task: str, **kwargs) -> AgentResult:
+    def run(cls, task: str, **kwargs: object) -> AgentResult:
         cmd = [cls.binary, "-p", task]
         return cls._exec(cmd)

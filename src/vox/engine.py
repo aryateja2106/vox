@@ -56,6 +56,7 @@ def translate(query: str, cfg: VoxConfig | None = None) -> str | None:
     """Translate natural language to a shell command using the configured provider."""
     if cfg is None:
         from vox.config import VoxConfig
+
         cfg = VoxConfig()
 
     model = cfg.model.name
@@ -123,6 +124,7 @@ def query_llm(prompt: str, cfg: VoxConfig | None = None, system: str | None = No
     """General-purpose LLM query (used by agent router, etc.)."""
     if cfg is None:
         from vox.config import VoxConfig
+
         cfg = VoxConfig()
 
     model = cfg.model.name
@@ -153,6 +155,7 @@ def check_ollama(cfg: VoxConfig | None = None) -> str:
     """Check if Ollama is running and the model is available."""
     if cfg is None:
         from vox.config import VoxConfig
+
         cfg = VoxConfig()
 
     api_url = cfg.model.api_url

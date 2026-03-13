@@ -28,7 +28,7 @@ class BaseAgent:
         return shutil.which(cls.binary)
 
     @classmethod
-    def run(cls, task: str, **kwargs) -> AgentResult:
+    def run(cls, task: str, **kwargs: object) -> AgentResult:
         """Execute a task via this agent's headless mode."""
         raise NotImplementedError
 
@@ -49,9 +49,7 @@ class BaseAgent:
                 error=result.stderr.strip() if result.returncode != 0 else None,
             )
         except subprocess.TimeoutExpired:
-            return AgentResult(
-                agent=cls.name, output="", exit_code=124, error="Agent timed out"
-            )
+            return AgentResult(agent=cls.name, output="", exit_code=124, error="Agent timed out")
         except FileNotFoundError:
             return AgentResult(
                 agent=cls.name, output="", exit_code=127, error=f"{cls.binary} not found"

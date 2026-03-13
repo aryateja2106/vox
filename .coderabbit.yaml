@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "en-US"
+tone_instructions: "Be direct and technical. Focus on Python best practices, security, and CLI UX."
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  auto_title_instructions: "Conventional commit format: type(scope): description"
+
+  review_status: true
+  commit_status: true
+  poem: false
+
+  suggested_labels: true
+  labeling_instructions:
+    - label: "security"
+      instructions: "Apply when PR touches command execution, dangerous pattern detection, or user input."
+
+  path_filters:
+    - "!__pycache__/**"
+    - "!**/*.pyc"
+    - "!.venv/**"
+    - "!*.lock"
+    - "!dist/**"
+
+  path_instructions:
+    - path: "src/vox/cli.py"
+      instructions: >-
+        This handles user input and command execution. Check DANGEROUS_PATTERNS
+        coverage. Verify readline history is handled safely. No command injection vectors.
+    - path: "src/vox/engine.py"
+      instructions: >-
+        This talks to Ollama. Verify clean_response() strips all model artifacts.
+        Check timeout handling on HTTP calls. System prompt must not leak internals.
+    - path: "**/*.sh"
+      instructions: >-
+        Install/uninstall scripts. Check for unquoted variables, missing set -e,
+        and that curl/wget pipes are validated.
+    - path: "tests/**"
+      instructions: >-
+        Tests must mock httpx calls. No real Ollama connections in tests.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    ignore_title_keywords:
+      - "WIP"
+      - "DRAFT"
+    drafts: false
+
+  tools:
+    ruff:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "local"

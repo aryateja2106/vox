@@ -11,6 +11,6 @@ class GeminiAgent(BaseAgent):
     description = "Google Gemini — best for research, summarization, multi-language tasks"
 
     @classmethod
-    def run(cls, task: str, **kwargs) -> AgentResult:
+    def run(cls, task: str, **kwargs: object) -> AgentResult:
         cmd = [cls.binary, "-p", task]
         return cls._exec(cmd)

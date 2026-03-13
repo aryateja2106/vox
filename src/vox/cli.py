@@ -200,9 +200,7 @@ def repl(cfg: VoxConfig) -> None:
         )
     )
     console.print("[dim]Type what you want to do. Ctrl+C to exit.[/dim]")
-    console.print(
-        "[dim]  !listen — voice input  |  !agent <task> — delegate to agent[/dim]"
-    )
+    console.print("[dim]  !listen — voice input  |  !agent <task> — delegate to agent[/dim]")
 
     model = cfg.model.name
     status = check_ollama(cfg)
@@ -419,9 +417,7 @@ def main() -> None:
         description="Talk to your terminal. Natural language to shell commands.",
     )
     parser.add_argument("--version", action="version", version=f"vox {__version__}")
-    parser.add_argument(
-        "--config", type=Path, default=None, help="Path to config file"
-    )
+    parser.add_argument("--config", type=Path, default=None, help="Path to config file")
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -429,21 +425,21 @@ def main() -> None:
     parser.add_argument(
         "query", nargs="*", default=[], help="Natural language command (omit for REPL)"
     )
+    parser.add_argument("--model", "-m", default=None, help="Ollama model name")
     parser.add_argument(
-        "--model", "-m", default=None, help="Ollama model name"
-    )
-    parser.add_argument(
-        "--execute", "-x", action="store_true",
+        "--execute",
+        "-x",
+        action="store_true",
         help="Auto-execute safe commands",
     )
-    parser.add_argument(
-        "--api", default=None, help="Ollama API URL"
-    )
+    parser.add_argument("--api", default=None, help="Ollama API URL")
 
     # ── listen ────────────────────────────────────────────────────────────
     listen_parser = subparsers.add_parser("listen", help="Voice input → shell command")
     listen_parser.add_argument(
-        "--execute", "-x", action="store_true",
+        "--execute",
+        "-x",
+        action="store_true",
         help="Auto-execute safe commands",
     )
 
@@ -454,11 +450,12 @@ def main() -> None:
     # ── agent ─────────────────────────────────────────────────────────────
     agent_parser = subparsers.add_parser("agent", help="Delegate task to AI agent")
     agent_parser.add_argument("task", nargs="*", help="Task description")
+    agent_parser.add_argument("--list", "-l", action="store_true", help="List detected agents")
     agent_parser.add_argument(
-        "--list", "-l", action="store_true", help="List detected agents"
-    )
-    agent_parser.add_argument(
-        "--use", "-u", default=None, help="Force a specific agent (claude, codex, gemini, amp, droid)"
+        "--use",
+        "-u",
+        default=None,
+        help="Force a specific agent (claude, codex, gemini, amp, droid)",
     )
 
     # ── config ────────────────────────────────────────────────────────────

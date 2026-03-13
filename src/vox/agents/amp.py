@@ -11,6 +11,6 @@ class AmpAgent(BaseAgent):
     description = "Sourcegraph Amp — best for codebase understanding, search, navigation"
 
     @classmethod
-    def run(cls, task: str, **kwargs) -> AgentResult:
+    def run(cls, task: str, **kwargs: object) -> AgentResult:
         cmd = [cls.binary, "-p", task]
         return cls._exec(cmd)

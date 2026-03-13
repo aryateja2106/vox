@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import queue
 import wave
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from vox.config import VoxConfig
@@ -28,7 +28,7 @@ def record_until_silence(
     device = cfg.voice.input_device if cfg else 0
     audio_queue: queue.Queue[bytes] = queue.Queue()
 
-    def callback(indata, frames, time_info, status):
+    def callback(indata: Any, frames: int, time_info: Any, status: Any) -> None:
         audio_queue.put(bytes(indata))
 
     frames_list: list[bytes] = []

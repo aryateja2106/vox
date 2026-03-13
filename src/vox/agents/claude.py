@@ -11,11 +11,15 @@ class ClaudeAgent(BaseAgent):
     description = "Anthropic Claude Code — best for code refactoring, debugging, architecture"
 
     @classmethod
-    def run(cls, task: str, **kwargs) -> AgentResult:
-        allowed_tools = kwargs.get("allowed_tools", "Read,Edit,Bash")
+    def run(cls, task: str, **kwargs: object) -> AgentResult:
+        allowed_tools = str(kwargs.get("allowed_tools", "Read,Edit,Bash"))
         cmd = [
-            cls.binary, "-p", task,
-            "--allowedTools", allowed_tools,
-            "--output-format", "text",
+            cls.binary,
+            "-p",
+            task,
+            "--allowedTools",
+            allowed_tools,
+            "--output-format",
+            "text",
         ]
         return cls._exec(cmd)

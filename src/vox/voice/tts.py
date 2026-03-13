@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from vox.config import VoxConfig
@@ -39,7 +39,7 @@ def speak_text(text: str, cfg: VoxConfig | None = None, save_path: str | None = 
     sd.play(audio_np, samplerate=24000, blocking=True)
 
 
-def _save_wav(audio_np, path: str, sample_rate: int = 24000) -> None:
+def _save_wav(audio_np: Any, path: str, sample_rate: int = 24000) -> None:
     """Save numpy audio array as WAV file."""
     import wave
 

@@ -7,6 +7,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -148,16 +149,18 @@ def load_config(path: Path | None = None) -> VoxConfig:
     return cfg
 
 
-def _apply_toml(cfg: VoxConfig, data: dict) -> None:
+def _apply_toml(cfg: VoxConfig, data: dict[str, Any]) -> None:
     """Apply parsed TOML data to config dataclasses."""
-    section_map = {
+    section_map: dict[str, object] = {
         "model": cfg.model,
         "voice": cfg.voice,
         "agents": cfg.agents,
         "ui": cfg.ui,
     }
     for section_name, section_obj in section_map.items():
-        section_data = data.get(section_name, {})
+        section_data = data.get(section_name)
+        if not isinstance(section_data, dict):
+            continue
         for key, val in section_data.items():
             if hasattr(section_obj, key):
                 setattr(section_obj, key, val)

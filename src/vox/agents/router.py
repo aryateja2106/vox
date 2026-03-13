@@ -48,9 +48,7 @@ def discover_agents() -> dict[str, str]:
     return found
 
 
-def _pick_agent(
-    task: str, available: dict[str, str], cfg: VoxConfig
-) -> type[BaseAgent]:
+def _pick_agent(task: str, available: dict[str, str], cfg: VoxConfig) -> type[BaseAgent]:
     """Use the local LLM to pick the best agent for a task."""
     from vox.engine import query_llm
 
