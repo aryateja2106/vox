@@ -4,7 +4,7 @@ These tasks are inspired by the Terminal-Bench 2.0 benchmark
 (https://www.tbench.ai/) and cover common real-world terminal scenarios.
 Each task verifies its own success via a shell command.
 
-Categories: file, process, git, network, archive, text, package
+Categories: file, text, process, system, archive, network, git, shell
 """
 
 from __future__ import annotations

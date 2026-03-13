@@ -20,6 +20,7 @@ Usage::
 
 from __future__ import annotations
 
+import contextlib
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -146,8 +147,6 @@ class Harness:
         )
 
         elapsed = time.monotonic() - start
-
-        import contextlib
 
         with contextlib.suppress(Exception):
             self._teardown(task)
