@@ -385,6 +385,57 @@ def cmd_agent(args: argparse.Namespace, cfg: VoxConfig) -> None:
         console.print("\n[dim]Cancelled.[/dim]")
 
 
+def cmd_bench(args: argparse.Namespace, cfg: VoxConfig) -> None:
+    """Run Terminal-Bench 2.0 evaluation tasks against the Vox engine."""
+    from vox.bench.harness import Harness
+    from vox.bench.tasks import BUILTIN_TASKS
+
+    tasks = BUILTIN_TASKS
+    if args.category:
+        tasks = [t for t in tasks if t.category == args.category]
+        if not tasks:
+            console.print(f"[yellow]No tasks found for category '{args.category}'.[/yellow]")
+            console.print(
+                "[dim]Available categories: "
+                + ", ".join(sorted({t.category for t in BUILTIN_TASKS}))
+                + "[/dim]"
+            )
+            return
+
+    if args.list:
+        from rich.table import Table
+
+        table = Table(title="Terminal-Bench Tasks", header_style="bold cyan")
+        table.add_column("ID", width=22)
+        table.add_column("Category", width=12)
+        table.add_column("Description")
+        for t in tasks:
+            table.add_row(t.id, t.category, t.description)
+        console.print(table)
+        console.print(f"\n[dim]{len(tasks)} tasks[/dim]")
+        return
+
+    if args.task_id:
+        matched = [t for t in tasks if t.id == args.task_id]
+        if not matched:
+            console.print(f"[red]Task '{args.task_id}' not found.[/red]")
+            return
+        tasks = matched
+
+    harness = Harness(cfg=cfg, dry_run=args.dry_run)
+
+    console.print(
+        f"\n[bold cyan]Terminal-Bench 2.0[/bold cyan] — running {len(tasks)} task(s)"
+        + (" [dim](dry-run)[/dim]" if args.dry_run else "")
+    )
+    console.print()
+
+    results = harness.run_all(tasks)
+
+    console.print()
+    harness.print_summary(results)
+
+
 def cmd_config(args: argparse.Namespace, _cfg: VoxConfig) -> None:
     """Manage vox configuration."""
     if args.config_action == "init":
@@ -458,6 +509,25 @@ def main() -> None:
         help="Force a specific agent (claude, codex, gemini, amp, droid)",
     )
 
+    # ── bench ─────────────────────────────────────────────────────────────
+    bench_parser = subparsers.add_parser(
+        "bench", help="Run Terminal-Bench 2.0 evaluation tasks"
+    )
+    bench_parser.add_argument(
+        "--list", "-l", action="store_true", help="List available tasks"
+    )
+    bench_parser.add_argument(
+        "--task", "-t", dest="task_id", default=None, help="Run a specific task by ID"
+    )
+    bench_parser.add_argument(
+        "--category", "-c", default=None, help="Filter tasks by category"
+    )
+    bench_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Translate commands but do not execute or verify them",
+    )
+
     # ── config ────────────────────────────────────────────────────────────
     config_parser = subparsers.add_parser("config", help="Manage configuration")
     config_parser.add_argument(
@@ -484,6 +554,8 @@ def main() -> None:
         cmd_speak(args, cfg)
     elif args.command == "agent":
         cmd_agent(args, cfg)
+    elif args.command == "bench":
+        cmd_bench(args, cfg)
     elif args.command == "config":
         cmd_config(args, cfg)
     elif args.query:
