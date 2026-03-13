@@ -1,0 +1,66 @@
+{
+  "groupId": "cli-dispatch",
+  "testedAt": "2026-03-13T00:00:00Z",
+  "isolation": {
+    "workingDirectory": "/Users/aryateja/Projects/vox",
+    "testFile": "tests/test_cli.py",
+    "sharedState": false,
+    "allTestsUseMocks": true
+  },
+  "toolsUsed": ["pytest"],
+  "assertions": {
+    "VAL-CLI-001": {
+      "status": "pass",
+      "evidence": "test_no_args_launches_repl PASSED — patches repl() and load_config, sets sys.argv to ['vox'], calls main(), asserts mock_repl.assert_called_once(). Confirms no-args launches REPL.",
+      "testFunction": "test_no_args_launches_repl"
+    },
+    "VAL-CLI-002": {
+      "status": "pass",
+      "evidence": "test_positional_query_dispatches_single_shot PASSED — patches handle_command and load_config, sets sys.argv to ['vox', 'find large files'], calls main(), asserts handle_command called once with 'find large files' as first arg.",
+      "testFunction": "test_positional_query_dispatches_single_shot"
+    },
+    "VAL-CLI-003": {
+      "status": "pass",
+      "evidence": "test_version_flag PASSED — sets sys.argv to ['vox', '--version'], calls main(), asserts SystemExit with code 0, captures stdout and asserts '0.3.0' in output.",
+      "testFunction": "test_version_flag"
+    },
+    "VAL-CLI-004": {
+      "status": "pass",
+      "evidence": "test_listen_subcommand_dispatches PASSED — patches cmd_listen and load_config, sets sys.argv to ['vox', 'listen'], calls main(), asserts cmd_listen called once.",
+      "testFunction": "test_listen_subcommand_dispatches"
+    },
+    "VAL-CLI-005": {
+      "status": "pass",
+      "evidence": "test_speak_subcommand_dispatches PASSED — patches cmd_speak and load_config, sets sys.argv to ['vox', 'speak', 'hello'], calls main(), asserts cmd_speak called once.",
+      "testFunction": "test_speak_subcommand_dispatches"
+    },
+    "VAL-CLI-006": {
+      "status": "pass",
+      "evidence": "test_agent_subcommand_dispatches PASSED — patches cmd_agent and load_config, sets sys.argv to ['vox', 'agent', 'fix tests'], calls main(), asserts cmd_agent called once.",
+      "testFunction": "test_agent_subcommand_dispatches"
+    },
+    "VAL-CLI-007": {
+      "status": "pass",
+      "evidence": "test_config_subcommand_dispatches PASSED — patches cmd_config and load_config, sets sys.argv to ['vox', 'config', 'show'], calls main(), asserts cmd_config called once.",
+      "testFunction": "test_config_subcommand_dispatches"
+    },
+    "VAL-CLI-008": {
+      "status": "pass",
+      "evidence": "test_model_flag_overrides_config PASSED — patches handle_command and load_config, sets sys.argv to ['vox', '-m', 'custom-model', 'query'], calls main(), asserts cfg.model.name == 'custom-model' on the config object passed to handle_command.",
+      "testFunction": "test_model_flag_overrides_config"
+    },
+    "VAL-CLI-009": {
+      "status": "pass",
+      "evidence": "test_api_flag_overrides_config PASSED — patches handle_command and load_config, sets sys.argv to ['vox', '--api', 'http://custom:1234', 'query'], calls main(), asserts cfg.model.api_url == 'http://custom:1234' on the config object passed to handle_command.",
+      "testFunction": "test_api_flag_overrides_config"
+    },
+    "VAL-CLI-010": {
+      "status": "pass",
+      "evidence": "test_execute_flag_enables_auto_execute PASSED — patches handle_command and load_config, sets sys.argv to ['vox', '-x', 'query'], calls main(), asserts auto_execute=True is passed to handle_command (checks both kwargs and positional args).",
+      "testFunction": "test_execute_flag_enables_auto_execute"
+    }
+  },
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 10 assertions: 10 passed, 0 failed. All CLI dispatch tests (VAL-CLI-001 through VAL-CLI-010) pass. Each test correctly maps to its assertion by patching the target handler, simulating sys.argv, calling main(), and verifying the expected dispatch/override behavior."
+}

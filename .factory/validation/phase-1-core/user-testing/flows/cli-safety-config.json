@@ -1,0 +1,61 @@
+{
+  "groupId": "cli-safety-config",
+  "testedAt": "2026-03-13T00:00:00Z",
+  "isolation": {
+    "workingDirectory": "/Users/aryateja/Projects/vox",
+    "testFile": "tests/test_cli.py",
+    "sharedState": false,
+    "allTestsUseMocks": true
+  },
+  "toolsUsed": ["pytest"],
+  "assertions": {
+    "VAL-CLI-011": {
+      "status": "pass",
+      "evidence": "All 14 TestIsDangerous tests passed: is_dangerous() returns True for rm -rf, rm -R, sudo, dd, mkfs, shred, reboot, shutdown, killall; returns False for ls, grep, find, cat, git status.",
+      "testFunction": "TestIsDangerous::test_rm_rf_is_dangerous, test_rm_recursive_uppercase_is_dangerous, test_sudo_is_dangerous, test_dd_is_dangerous, test_mkfs_is_dangerous, test_shred_is_dangerous, test_reboot_is_dangerous, test_shutdown_is_dangerous, test_killall_is_dangerous, test_ls_is_safe, test_grep_is_safe, test_find_is_safe, test_cat_is_safe, test_git_status_is_safe"
+    },
+    "VAL-CLI-012": {
+      "status": "pass",
+      "evidence": "All 11 TestLooksLikeShell tests passed: looks_like_shell() returns False for 'import os', 'from pathlib import Path', 'def hello():', 'class MyClass:', '<html>', '<?php echo'; returns True for 'ls -la', 'find . -name ...', 'cat file.txt | grep pattern', 'git log --oneline -10', and empty string.",
+      "testFunction": "TestLooksLikeShell::test_python_import_rejected, test_python_from_import_rejected, test_python_def_rejected, test_python_class_rejected, test_html_rejected, test_php_rejected, test_valid_shell_accepted, test_find_command_accepted, test_pipe_accepted, test_git_command_accepted, test_empty_string_accepted"
+    },
+    "VAL-CLI-013": {
+      "status": "pass",
+      "evidence": "test_config_init_creates_template passed: patches init_config (returns mock path), calls cmd_config with config_action='init', asserts init_config called once and console output mentions config.toml or 'Config created'.",
+      "testFunction": "test_config_init_creates_template"
+    },
+    "VAL-CLI-014": {
+      "status": "pass",
+      "evidence": "Both tests passed: test_config_show_displays_toml mocks CONFIG_FILE.is_file()=True with TOML content and verifies console.print called; test_config_show_hint_when_missing mocks CONFIG_FILE.is_file()=False and verifies output contains 'No config file found' or 'vox config init'.",
+      "testFunction": "test_config_show_displays_toml, test_config_show_hint_when_missing"
+    },
+    "VAL-CLI-015": {
+      "status": "pass",
+      "evidence": "test_config_path_prints_path passed: calls cmd_config with config_action='path', asserts console.print called once with output containing 'config.toml'.",
+      "testFunction": "test_config_path_prints_path"
+    },
+    "VAL-CLI-016": {
+      "status": "pass",
+      "evidence": "Both tests passed: test_agent_list_shows_agents mocks discover_agents returning claude+codex, verifies both names printed; test_agent_list_no_agents mocks discover_agents returning {}, verifies 'No agents found' in output.",
+      "testFunction": "test_agent_list_shows_agents, test_agent_list_no_agents"
+    },
+    "VAL-CLI-017": {
+      "status": "pass",
+      "evidence": "test_agent_no_task_prints_hint passed: calls cmd_agent with empty task list, asserts route_and_run not called, verifies 'No task provided' in console output.",
+      "testFunction": "test_agent_no_task_prints_hint"
+    },
+    "VAL-CLI-018": {
+      "status": "pass",
+      "evidence": "test_agent_use_flag_sets_env passed: calls cmd_agent with use='claude' and task=['fix','tests'], asserts os.environ['VOX_PREFERRED_AGENT']=='claude' and route_and_run called once. Properly cleans up env var afterward.",
+      "testFunction": "test_agent_use_flag_sets_env"
+    },
+    "VAL-CLI-019": {
+      "status": "pass",
+      "evidence": "All 3 tests passed: test_config_edit_launches_editor verifies os.execvp called with EDITOR='vim'; test_config_edit_creates_config_if_missing verifies init_config called when file missing then os.execvp called; test_config_edit_defaults_to_nano verifies os.execvp called with 'nano' when EDITOR not set.",
+      "testFunction": "test_config_edit_launches_editor, test_config_edit_creates_config_if_missing, test_config_edit_defaults_to_nano"
+    }
+  },
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 9 assertions (VAL-CLI-011 through VAL-CLI-019): all 9 passed. 36 individual test functions executed, 36 passed, 0 failed."
+}
