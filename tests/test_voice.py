@@ -43,6 +43,8 @@ def test_transcribe_mic_flow(mock_record, mock_tb):
     mock_tb.return_value = "test transcription"
     result = transcribe_mic(VoxConfig())
     assert result == "test transcription"
+    mock_record.assert_called_once()
+    mock_tb.assert_called_once()
 
 
 def test_voice_config_defaults():

@@ -38,7 +38,7 @@ all = [
 ]
 
 [tool.uv]
-prerelease = "allow"
+prerelease = "if-necessary-or-explicit"
 
 [project.scripts]
 vox = "vox.cli:main"
@@ -64,8 +64,15 @@ src = ["src"]
 select = ["E", "W", "F", "I", "N", "UP", "B", "S", "T20", "SIM", "RUF"]
 ignore = ["T201", "S101", "S602", "S603", "S606", "S607", "E501", "S108"]
 
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "mlx_audio.**",
+    "mlx.**",
+    "numpy.**",
+    "sounddevice.**",
+]
+
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
     "pytest>=8.4.2",
 ]
