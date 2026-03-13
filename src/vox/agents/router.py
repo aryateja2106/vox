@@ -9,6 +9,7 @@ from vox.agents.claude import ClaudeAgent
 from vox.agents.codex import CodexAgent
 from vox.agents.droid import DroidAgent
 from vox.agents.gemini import GeminiAgent
+from vox.agents.pi import PiAgent
 
 if TYPE_CHECKING:
     from vox.agents.base import AgentResult, BaseAgent
@@ -20,6 +21,7 @@ ALL_AGENTS: list[type[BaseAgent]] = [
     GeminiAgent,
     AmpAgent,
     DroidAgent,
+    PiAgent,
 ]
 
 ROUTE_SYSTEM_PROMPT = """\
@@ -34,6 +36,7 @@ Rules:
 - For research, summarization, questions → prefer gemini
 - For complex multi-step engineering → prefer droid
 - For codebase search and understanding → prefer amp
+- For minimal/lightweight terminal tasks → prefer pi
 - If unsure, use the preferred agent
 """
 
