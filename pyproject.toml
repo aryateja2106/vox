@@ -1,12 +1,12 @@
 [project]
 name = "vox-shell"
-version = "0.2.0"
-description = "Talk to your terminal. Natural language to shell commands, powered by a local AI model."
+version = "0.3.0"
+description = "Personal terminal agent. Voice, AI agents, and natural language to shell — all local."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Arya Teja" }]
-keywords = ["shell", "terminal", "natural-language", "ai", "cli", "voice", "bash", "ollama"]
+keywords = ["shell", "terminal", "natural-language", "ai", "cli", "voice", "bash", "ollama", "agent", "assistant"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -20,7 +20,25 @@ classifiers = [
 dependencies = [
     "httpx>=0.24",
     "rich>=13.0",
+    "tomli>=2.0;python_version<'3.11'",
 ]
+
+[project.optional-dependencies]
+voice = [
+    "mlx-audio>=0.4",
+    "sounddevice>=0.4",
+]
+finetune = [
+    "transformers>=4.40",
+    "peft>=0.10",
+    "datasets>=2.18",
+]
+all = [
+    "vox-shell[voice,finetune]",
+]
+
+[tool.uv]
+prerelease = "if-necessary-or-explicit"
 
 [project.scripts]
 vox = "vox.cli:main"
@@ -38,13 +56,21 @@ build-backend = "hatchling.build"
 packages = ["src/vox"]
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 100
 src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "UP", "B", "S", "T20", "SIM", "RUF"]
-ignore = ["T201", "S101", "S602", "S603", "S607", "E501", "S108"]
+ignore = ["T201", "S101", "S602", "S603", "S606", "S607", "E501", "S108"]
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "mlx_audio.**",
+    "mlx.**",
+    "numpy.**",
+    "sounddevice.**",
+]
 
 [dependency-groups]
 dev = [

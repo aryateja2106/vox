@@ -26,7 +26,10 @@ def test_clean_response_inline_backticks():
 
 
 def test_clean_response_comment_lines():
-    assert clean_response("# Create a new branch\ngit checkout -b feature") == "git checkout -b feature"
+    assert (
+        clean_response("# Create a new branch\ngit checkout -b feature")
+        == "git checkout -b feature"
+    )
 
 
 def test_clean_response_preamble():
