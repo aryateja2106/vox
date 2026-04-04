@@ -1,0 +1,273 @@
+{
+  "groupId": "router-assertions",
+  "testedAt": "2026-03-13T00:00:00Z",
+  "isolation": {
+    "repo": "/Users/aryateja/Projects/vox",
+    "testFile": "tests/test_router.py",
+    "sharedState": false,
+    "allMocked": true
+  },
+  "toolsUsed": ["Execute (uv run pytest)"],
+  "assertions": [
+    {
+      "id": "VAL-RTR-001",
+      "title": "Coding keywords route to coding agent",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestHeuristicCodingKeywords (5 tests)", "expected": "All 5 pass: refactor, code, fix, debug, implement route to coding agent without LLM", "observed": "All 5 PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestHeuristicCodingKeywords::test_refactor_routes_to_coding_agent PASSED",
+          "TestHeuristicCodingKeywords::test_code_routes_to_coding_agent PASSED",
+          "TestHeuristicCodingKeywords::test_fix_routes_to_coding_agent PASSED",
+          "TestHeuristicCodingKeywords::test_debug_routes_to_coding_agent PASSED",
+          "TestHeuristicCodingKeywords::test_implement_routes_to_coding_agent PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-002",
+      "title": "Research keywords route to gemini",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestHeuristicResearchKeywords (3 tests)", "expected": "All 3 pass: research, search, summarize route to gemini without LLM", "observed": "All 3 PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestHeuristicResearchKeywords::test_research_routes_to_gemini PASSED",
+          "TestHeuristicResearchKeywords::test_search_routes_to_gemini PASSED",
+          "TestHeuristicResearchKeywords::test_summarize_routes_to_gemini PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-003",
+      "title": "Keywords are case-insensitive",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestCaseInsensitiveMatching (3 tests)", "expected": "REFACTOR, Research, FIX all match heuristic categories", "observed": "All 3 PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestCaseInsensitiveMatching::test_uppercase_refactor_matches PASSED",
+          "TestCaseInsensitiveMatching::test_mixed_case_research_matches PASSED",
+          "TestCaseInsensitiveMatching::test_uppercase_fix_matches PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-004",
+      "title": "No keyword match triggers LLM fallback",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestLLMFallback::test_no_keyword_triggers_llm_fallback", "expected": "query_llm IS called when no keyword matches", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestLLMFallback::test_no_keyword_triggers_llm_fallback PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-005",
+      "title": "LLM fallback valid response",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestLLMFallback::test_llm_valid_response_selects_agent", "expected": "Valid agent name from LLM is selected", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestLLMFallback::test_llm_valid_response_selects_agent PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-006",
+      "title": "LLM fallback invalid/empty response",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestLLMFallback::test_llm_garbage_falls_back_to_preferred and test_llm_none_falls_back_to_preferred", "expected": "Garbage/None from LLM falls back to preferred agent", "observed": "Both PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestLLMFallback::test_llm_garbage_falls_back_to_preferred PASSED",
+          "TestLLMFallback::test_llm_none_falls_back_to_preferred PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-007",
+      "title": "No agents returns graceful error",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestNoAgents::test_no_agents_returns_message", "expected": "Returns user-friendly message when no agents discovered", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestNoAgents::test_no_agents_returns_message PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-008",
+      "title": "Single agent used directly",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestSingleAgent::test_single_agent_used_directly", "expected": "Single available agent is used without LLM call", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestSingleAgent::test_single_agent_used_directly PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-009",
+      "title": "Force agent overrides all routing",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestForceAgent (2 tests)", "expected": "force_agent and env var override heuristic/LLM routing", "observed": "Both PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestForceAgent::test_force_agent_overrides_heuristic PASSED",
+          "TestForceAgent::test_force_agent_via_env_var PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-010",
+      "title": "Preferred agent with auto_route disabled",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestAutoRouteDisabled::test_auto_route_false_uses_preferred", "expected": "With auto_route=False, preferred agent is used without heuristic or LLM", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestAutoRouteDisabled::test_auto_route_false_uses_preferred PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-011",
+      "title": "Heuristic priority over LLM",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestHeuristicPriorityOverLLM::test_heuristic_match_skips_llm_with_multiple_agents", "expected": "When heuristic matches, LLM is never called", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestHeuristicPriorityOverLLM::test_heuristic_match_skips_llm_with_multiple_agents PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-012",
+      "title": "Agent discovery scans PATH",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestAgentDiscovery (2 tests)", "expected": "discover_agents returns correct dict based on shutil.which results", "observed": "Both PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestAgentDiscovery::test_discovers_selective_agents PASSED",
+          "TestAgentDiscovery::test_discovers_all_agents PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-013",
+      "title": "Output formatted correctly",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestOutputFormatting (3 tests)", "expected": "Success shows agent+output, failure shows error, empty shows completed", "observed": "All 3 PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestOutputFormatting::test_success_shows_agent_and_output PASSED",
+          "TestOutputFormatting::test_failure_shows_error PASSED",
+          "TestOutputFormatting::test_empty_output_shows_completed PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-014",
+      "title": "Word boundary matching",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestWordBoundaryMatching (4 tests)", "expected": "fix doesn't match prefix/suffix, code doesn't match barcode, search doesn't match researcher", "observed": "All 4 PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestWordBoundaryMatching::test_fix_does_not_match_prefix PASSED",
+          "TestWordBoundaryMatching::test_fix_does_not_match_suffix PASSED",
+          "TestWordBoundaryMatching::test_code_does_not_match_barcode PASSED",
+          "TestWordBoundaryMatching::test_search_does_not_match_researcher PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-015",
+      "title": "Conflicting keywords priority",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestConflictingKeywords (2 tests)", "expected": "Coding keywords have priority over research keywords", "observed": "Both PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestConflictingKeywords::test_coding_priority_over_research PASSED",
+          "TestConflictingKeywords::test_implement_beats_summarize PASSED"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-RTR-016",
+      "title": "Force agent unavailable falls through",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestForceAgentUnavailable::test_force_agent_unavailable_falls_through", "expected": "Unavailable forced agent gracefully falls back to normal routing", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/router-assertions/pytest-output.txt",
+        "testsRun": [
+          "TestForceAgentUnavailable::test_force_agent_unavailable_falls_through PASSED"
+        ]
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 16 assertions (VAL-RTR-001 through VAL-RTR-016): all 16 passed. 38 total unit tests in test_router.py executed in 0.06s with 0 failures."
+}

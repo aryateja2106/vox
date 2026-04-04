@@ -411,20 +411,14 @@ def cmd_config(args: argparse.Namespace, _cfg: VoxConfig) -> None:
 # ── Main entry point ─────────────────────────────────────────────────────────
 
 
-def main() -> None:
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser."""
     parser = argparse.ArgumentParser(
         prog="vox",
         description="Talk to your terminal. Natural language to shell commands.",
     )
     parser.add_argument("--version", action="version", version=f"vox {__version__}")
     parser.add_argument("--config", type=Path, default=None, help="Path to config file")
-
-    subparsers = parser.add_subparsers(dest="command")
-
-    # ── Default: shell mode (query as positional args) ────────────────────
-    parser.add_argument(
-        "query", nargs="*", default=[], help="Natural language command (omit for REPL)"
-    )
     parser.add_argument("--model", "-m", default=None, help="Ollama model name")
     parser.add_argument(
         "--execute",
@@ -433,6 +427,8 @@ def main() -> None:
         help="Auto-execute safe commands",
     )
     parser.add_argument("--api", default=None, help="Ollama API URL")
+
+    subparsers = parser.add_subparsers(dest="command")
 
     # ── listen ────────────────────────────────────────────────────────────
     listen_parser = subparsers.add_parser("listen", help="Voice input → shell command")
@@ -468,7 +464,52 @@ def main() -> None:
         help="Config action",
     )
 
-    args = parser.parse_args()
+    return parser
+
+
+_SUBCOMMANDS = frozenset({"listen", "speak", "agent", "config"})
+
+
+def main() -> None:
+    parser = _build_parser()
+
+    # Detect whether the first positional arg is a known subcommand.
+    # If not, strip positionals out so argparse only sees flags, then
+    # treat the stripped positionals as a free-form query.
+    raw = sys.argv[1:]
+    flags: list[str] = []
+    query_words: list[str] = []
+    has_subcommand = False
+
+    # Scan for the first non-flag token to decide dispatch mode
+    for token in raw:
+        if token.startswith("-"):
+            break
+        if token in _SUBCOMMANDS:
+            has_subcommand = True
+        break
+
+    if has_subcommand:
+        args = parser.parse_args()
+        query_words = []
+    else:
+        # Separate flags from positional query words
+        skip_next = False
+        for token in raw:
+            if skip_next:
+                flags.append(token)
+                skip_next = False
+            elif token.startswith("-"):
+                flags.append(token)
+                # Flags that consume a value
+                if token in ("--model", "-m", "--api", "--config"):
+                    skip_next = True
+            else:
+                query_words.append(token)
+        args = parser.parse_args(flags)
+
+    args.query = query_words
+
     cfg = load_config(args.config)
 
     # CLI flag overrides

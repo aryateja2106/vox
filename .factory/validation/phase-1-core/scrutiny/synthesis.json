@@ -1,0 +1,93 @@
+{
+  "milestone": "phase-1-core",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "uv run pytest tests/ -v",
+      "exitCode": 0,
+      "detail": "101 tests passed in 0.13s"
+    },
+    "lint": {
+      "passed": true,
+      "command": "uv run ruff check src/",
+      "exitCode": 0,
+      "detail": "All checks passed"
+    }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "nonBlockingIssues": [
+    {
+      "featureId": "cli-test-suite",
+      "severity": "non_blocking",
+      "description": "test_positional_query_dispatches_single_shot uses single quoted arg instead of separate words. An additional test with separate words would improve confidence.",
+      "location": "tests/test_cli.py:34"
+    },
+    {
+      "featureId": "cli-test-suite",
+      "severity": "non_blocking",
+      "description": "test_execute_flag_enables_auto_execute has overly permissive assertion checking both keyword and positional arg passing.",
+      "location": "tests/test_cli.py:76"
+    },
+    {
+      "featureId": "cli-test-suite",
+      "severity": "non_blocking",
+      "description": "Two-pass parsing doesn't support flags-before-subcommand ordering (e.g., 'vox --model foo listen').",
+      "location": "src/vox/cli.py:478"
+    },
+    {
+      "featureId": "provider-abstraction",
+      "severity": "non_blocking",
+      "description": "Exception tests use try/except pattern instead of idiomatic pytest.raises().",
+      "location": "tests/test_provider.py:33"
+    },
+    {
+      "featureId": "provider-abstraction",
+      "severity": "non_blocking",
+      "description": "Error path tests verify None return but don't assert stderr output messages.",
+      "location": "tests/test_provider.py:139"
+    },
+    {
+      "featureId": "provider-abstraction",
+      "severity": "non_blocking",
+      "description": "No explicit delegation test for module-level query_llm() wrapper.",
+      "location": "tests/test_provider.py:309"
+    },
+    {
+      "featureId": "provider-abstraction",
+      "severity": "non_blocking",
+      "description": "Module-level wrappers create new OllamaProvider on every call — micro-inefficiency for repeated calls.",
+      "location": "src/vox/engine.py:185"
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add to Architecture Notes: 'CLI main() uses two-pass parsing: first pass detects subcommands from _SUBCOMMANDS frozenset, second pass separates flags from query words. This means flags must come BEFORE the subcommand, not after.'",
+      "evidence": "cli-test-suite worker refactored cli.py main() with two-pass parsing (lines 467-510) to fix argparse positional query conflict on Python 3.12+. AGENTS.md currently only says 'argparse with subcommands'.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add to Testing Conventions: 'Use pytest.raises() for exception assertions, not try/except/assert False patterns.'",
+      "evidence": "provider-abstraction tests at test_provider.py:33 use try/except instead of pytest.raises(). Currently AGENTS.md specifies unittest.mock for mocking but not exception testing idiom.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills",
+      "suggestion": "Update tdd-worker skill to mention: 'When testing existing code, you may discover pre-existing bugs that need fixing. Fixing these bugs is acceptable during the GREEN phase when the bug is in scope and blocks your tests from validating correct behavior.'",
+      "evidence": "cli-test-suite worker found and fixed an argparse bug during GREEN phase. Current skill lists pre-existing bugs as a reason to return to orchestrator, but fixing in-feature was the correct action here.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}

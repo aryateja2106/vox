@@ -1,0 +1,45 @@
+{
+  "featureId": "heuristic-router",
+  "reviewedAt": "2026-03-13T12:10:00.000Z",
+  "commitId": "6bd8ae0",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Clean, correct implementation of heuristic keyword routing with comprehensive test coverage. The _heuristic_route() function uses re.search with \\b word boundaries for case-insensitive keyword matching, with coding keywords checked before research keywords to enforce priority. The route_and_run() function correctly chains: force_agent → auto_route=False → heuristic → LLM fallback → preferred. 38 well-structured tests across 13 classes cover all 16 VAL-RTR assertions. tests/test_agents.py was verified unmodified (empty git diff). Ruff passes clean. All 47 tests (38 router + 9 agents) pass.",
+    "issues": [
+      {
+        "file": "tests/test_router.py",
+        "line": 73,
+        "severity": "non_blocking",
+        "description": "Tests reference ALL_AGENTS by index (ALL_AGENTS[0] for claude, ALL_AGENTS[2] for gemini) when patching .run(). If ALL_AGENTS ordering changes, tests silently break. Consider using a named lookup like next(a for a in ALL_AGENTS if a.name == 'claude') for resilience."
+      },
+      {
+        "file": "src/vox/agents/router.py",
+        "line": 58,
+        "severity": "non_blocking",
+        "description": "Regex patterns are compiled on each _heuristic_route() call (8 re.search calls worst-case). For a CLI tool this is negligible, but pre-compiling patterns at module level would be marginally more efficient."
+      },
+      {
+        "file": "tests/test_router.py",
+        "line": 460,
+        "severity": "non_blocking",
+        "description": "test_heuristic_only_routes_if_agent_available tests the case where coding agents are unavailable but a coding keyword matches. A symmetric test for research keyword with no research agent available would complete the coverage, though not strictly required by the validation contract."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Worker moved 'from vox.engine import query_llm' from an inline import inside _pick_agent() to a module-level import. This changes the import topology — router.py now unconditionally imports engine.py at module load time. The AGENTS.md documents 'Use unittest.mock.patch for mocking external dependencies' but doesn't specify whether imports should be module-level or deferred. The change was necessary for test mockability (patch target must be where the name is looked up), so this is reasonable.",
+      "evidence": "git diff shows removal of 'from vox.engine import query_llm' inside _pick_agent() and addition at module top-level (router.py line 12)"
+    },
+    {
+      "area": "skills",
+      "observation": "The tdd-worker skill file was not found at .factory/skills/tdd-worker/SKILL.md. Cannot verify skill procedure adherence. The handoff reports followedProcedure=true with no deviations. Transcript skeleton confirms RED-GREEN-REFACTOR pattern was followed: tests written first (32 failures in RED), implementation added (38 pass in GREEN), full suite verified.",
+      "evidence": "Glob for .factory/skills/**/SKILL.md returned no results. Transcript shows: 'RED phase confirmed: 32 failed, 6 passed' followed by GREEN implementation and 'All 38 tests pass'."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The heuristic-router feature is correctly implemented following strict TDD. _heuristic_route() provides fast keyword-based routing using regex word boundaries, correctly prioritizing coding keywords over research keywords. route_and_run() properly chains force_agent → auto_route check → heuristic → LLM fallback. 38 tests cover all 16 VAL-RTR assertions including edge cases (word boundaries, case insensitivity, conflicting keywords, unavailable agents). tests/test_agents.py is confirmed unmodified. Three non-blocking observations noted: test fragility from ALL_AGENTS index coupling, regex compilation on each call, and a missing symmetric test for research-keyword-with-no-research-agent."
+}

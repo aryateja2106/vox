@@ -1,0 +1,117 @@
+{
+  "groupId": "wrapper-assertions",
+  "testedAt": "2026-03-13T00:00:00Z",
+  "isolation": {
+    "repo": "/Users/aryateja/Projects/vox",
+    "testFile": "tests/test_wrappers.py",
+    "runner": "uv run pytest tests/test_wrappers.py -v --tb=short",
+    "sharedState": false
+  },
+  "toolsUsed": ["Execute (pytest)"],
+  "assertions": [
+    {
+      "id": "VAL-WRAP-001",
+      "title": "AgentResult dataclass stores all fields",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestAgentResultDataclass::test_stores_all_explicit_fields", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAgentResultDataclass::test_exit_code_defaults_to_zero", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAgentResultDataclass::test_error_defaults_to_none", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAgentResultDataclass::test_defaults_together", "expected": "PASSED", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 4,
+        "testsPassed": 4
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WRAP-002",
+      "title": "BaseAgent._exec handles timeout",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestExecTimeoutHandling::test_timeout_returns_exit_code_124", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestExecTimeoutHandling::test_timeout_returns_timed_out_error", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestExecTimeoutHandling::test_timeout_returns_empty_output", "expected": "PASSED", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 3,
+        "testsPassed": 3
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WRAP-003",
+      "title": "BaseAgent._exec handles missing binary",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestExecFileNotFoundHandling::test_file_not_found_returns_exit_code_127", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestExecFileNotFoundHandling::test_file_not_found_error_contains_binary_name", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestExecFileNotFoundHandling::test_file_not_found_returns_empty_output", "expected": "PASSED", "observed": "PASSED" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 3,
+        "testsPassed": 3
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WRAP-004",
+      "title": "Each wrapper builds correct command",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestClaudeCommandConstruction (4 tests)", "expected": "PASSED", "observed": "All 4 PASSED — binary, -p+task, --allowedTools, --output-format text" },
+        { "action": "Run TestCodexCommandConstruction (3 tests)", "expected": "PASSED", "observed": "All 3 PASSED — binary, exec subcommand, task" },
+        { "action": "Run TestGeminiCommandConstruction (1 test)", "expected": "PASSED", "observed": "PASSED — binary, -p, task" },
+        { "action": "Run TestAmpCommandConstruction (1 test)", "expected": "PASSED", "observed": "PASSED — binary, -p, task" },
+        { "action": "Run TestDroidCommandConstruction (1 test)", "expected": "PASSED", "observed": "PASSED — binary, -p, task" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 10,
+        "testsPassed": 10
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WRAP-005",
+      "title": "All wrappers have name, binary, and description",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestAllAgentsAttributes::test_all_agents_have_non_empty_name", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAllAgentsAttributes::test_all_agents_have_non_empty_binary", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAllAgentsAttributes::test_all_agents_have_non_empty_description", "expected": "PASSED", "observed": "PASSED" },
+        { "action": "Run TestAllAgentsAttributes::test_all_agents_count_at_least_five", "expected": "PASSED", "observed": "PASSED — ALL_AGENTS contains ≥5 agents" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 4,
+        "testsPassed": 4
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WRAP-006",
+      "title": "Non-zero exit code captures stderr",
+      "status": "pass",
+      "steps": [
+        { "action": "Run TestExecNonZeroExitWithStderr::test_nonzero_exit_captures_returncode", "expected": "PASSED", "observed": "PASSED — exit_code == 2" },
+        { "action": "Run TestExecNonZeroExitWithStderr::test_nonzero_exit_captures_stderr", "expected": "PASSED", "observed": "PASSED — error == 'something went wrong'" },
+        { "action": "Run TestExecNonZeroExitWithStderr::test_nonzero_exit_captures_stdout", "expected": "PASSED", "observed": "PASSED — output == 'partial output'" },
+        { "action": "Run TestExecNonZeroExitWithStderr::test_zero_exit_has_no_error", "expected": "PASSED", "observed": "PASSED — error is None for exit_code 0" }
+      ],
+      "evidence": {
+        "testOutput": "phase-3-agents/wrapper-assertions/pytest-output.txt",
+        "testsRun": 4,
+        "testsPassed": 4
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 6 assertions (VAL-WRAP-001 through VAL-WRAP-006): all 6 passed. 30 total tests executed, 30 passed, 0 failed in 0.05s."
+}

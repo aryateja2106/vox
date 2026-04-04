@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 from vox.agents.amp import AmpAgent
@@ -9,6 +10,7 @@ from vox.agents.claude import ClaudeAgent
 from vox.agents.codex import CodexAgent
 from vox.agents.droid import DroidAgent
 from vox.agents.gemini import GeminiAgent
+from vox.engine import query_llm
 
 if TYPE_CHECKING:
     from vox.agents.base import AgentResult, BaseAgent
@@ -38,6 +40,39 @@ Rules:
 """
 
 
+# Keyword categories for heuristic routing (checked in order: coding first).
+_CODING_KEYWORDS = ("refactor", "code", "fix", "debug", "implement")
+_RESEARCH_KEYWORDS = ("research", "search", "summarize")
+
+_CODING_AGENTS = ("claude", "codex")
+_RESEARCH_AGENTS = ("gemini",)
+
+
+def _heuristic_route(
+    task: str,
+    agent_map: dict[str, type[BaseAgent]],
+) -> type[BaseAgent] | None:
+    """Try to route a task by keyword matching. Returns agent class or None."""
+    # Coding keywords checked first (priority over research).
+    for kw in _CODING_KEYWORDS:
+        if re.search(rf"\b{kw}\b", task, re.IGNORECASE):
+            for name in _CODING_AGENTS:
+                if name in agent_map:
+                    return agent_map[name]
+            # Coding keyword matched but no coding agent available
+            return None
+
+    for kw in _RESEARCH_KEYWORDS:
+        if re.search(rf"\b{kw}\b", task, re.IGNORECASE):
+            for name in _RESEARCH_AGENTS:
+                if name in agent_map:
+                    return agent_map[name]
+            # Research keyword matched but no research agent available
+            return None
+
+    return None
+
+
 def discover_agents() -> dict[str, str]:
     """Scan PATH for known agent binaries. Returns {name: path}."""
     found = {}
@@ -50,8 +85,6 @@ def discover_agents() -> dict[str, str]:
 
 def _pick_agent(task: str, available: dict[str, str], cfg: VoxConfig) -> type[BaseAgent]:
     """Use the local LLM to pick the best agent for a task."""
-    from vox.engine import query_llm
-
     agent_map = {a.name: a for a in ALL_AGENTS if a.name in available}
 
     if len(agent_map) == 1:
@@ -95,11 +128,20 @@ def route_and_run(
 
     if force_agent and force_agent in agent_map:
         agent_cls = agent_map[force_agent]
-    elif cfg.agents.auto_route and len(agent_map) > 1:
-        agent_cls = _pick_agent(task, available, cfg)
-    else:
+    elif not cfg.agents.auto_route:
         preferred = cfg.agents.preferred
         agent_cls = agent_map.get(preferred, next(iter(agent_map.values())))
+    else:
+        # Heuristic keyword routing (fast, no LLM call)
+        heuristic = _heuristic_route(task, agent_map)
+        if heuristic is not None:
+            agent_cls = heuristic
+        elif len(agent_map) > 1:
+            # LLM fallback when heuristic didn't match and multiple agents
+            agent_cls = _pick_agent(task, available, cfg)
+        else:
+            preferred = cfg.agents.preferred
+            agent_cls = agent_map.get(preferred, next(iter(agent_map.values())))
 
     result: AgentResult = agent_cls.run(task)
 

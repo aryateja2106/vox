@@ -1,0 +1,45 @@
+{
+  "featureId": "cli-test-suite",
+  "reviewedAt": "2026-03-13T11:35:00.000Z",
+  "commitId": "b287f4b",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "51 test functions covering all 19 VAL-CLI assertions (VAL-CLI-001 through VAL-CLI-019). Tests are well-structured, use unittest.mock.patch consistently, and follow project conventions. The worker also fixed a pre-existing argparse bug where positional queries conflicted with subparser validation on Python 3.12+ by introducing two-pass parsing in main(). Only two files were modified (tests/test_cli.py created, src/vox/cli.py refactored) — no off-limits files touched. All 78 tests pass, ruff clean.",
+    "issues": [
+      {
+        "file": "tests/test_cli.py",
+        "line": 34,
+        "severity": "non_blocking",
+        "description": "test_positional_query_dispatches_single_shot uses sys.argv=['vox', 'find large files'] (single quoted string). In real shell usage, 'vox find large files' would produce ['vox', 'find', 'large', 'files']. The implementation's two-pass parsing handles both cases correctly (joining query_words), but an additional test with separate words would improve confidence in the unquoted path."
+      },
+      {
+        "file": "tests/test_cli.py",
+        "line": 76,
+        "severity": "non_blocking",
+        "description": "test_execute_flag_enables_auto_execute has an overly permissive assertion that checks both keyword and positional arg passing: `call_kwargs[1].get('auto_execute') is True or (len(call_kwargs[0]) >= 3 and call_kwargs[0][2] is True)`. This is flexible but makes the test less precise about the implementation's actual calling convention."
+      },
+      {
+        "file": "src/vox/cli.py",
+        "line": 478,
+        "severity": "non_blocking",
+        "description": "Two-pass parsing in main() only checks the first token for subcommand detection. This means 'vox --model foo listen' would treat 'listen' as a query word rather than a subcommand. While not a regression (original code likely had similar limitations with nargs='*'), it's worth documenting as a known limitation."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Worker refactored cli.py main() significantly: extracted _build_parser(), added _SUBCOMMANDS frozenset, and implemented two-pass parsing. AGENTS.md mentions 'CLI entry: src/vox/cli.py:main() using argparse with subcommands' but doesn't document the two-pass parsing architecture. This new pattern (subcommand detection → flag/query separation) is a meaningful architectural decision that future workers should know about.",
+      "evidence": "src/vox/cli.py lines 467-510: _SUBCOMMANDS frozenset + two-pass parsing loop in main(). AGENTS.md 'Architecture Notes' section only mentions 'argparse with subcommands'."
+    },
+    {
+      "area": "skills",
+      "observation": "Worker's skillFeedback suggests the TDD skill should mention that 'testing existing code may uncover pre-existing bugs that need fixing before tests can pass, and that fixing those bugs is part of the GREEN phase.' This is a valid observation — the worker found and fixed an argparse bug during the GREEN phase, which the skill's procedure doesn't account for. The skill lists 'A pre-existing bug prevents the feature from being implemented correctly' as a reason to return to orchestrator, but fixing the bug in-feature (when it's in scope) is also valid.",
+      "evidence": "Handoff skillFeedback.suggestedChanges: ['The TDD skill could mention that testing existing code may uncover pre-existing bugs that need fixing']. Worker discovered argparse positional query dispatch was broken on Python 3.12+."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The cli-test-suite feature is well-implemented with 51 test functions covering all 19 VAL-CLI assertions. Tests follow project conventions (unittest.mock.patch, pure unit tests, descriptive naming). The worker also fixed a pre-existing argparse bug in cli.py by refactoring main() with two-pass parsing — a reasonable and well-tested change. No off-limits files were modified. Three non-blocking issues noted: (1) positional query test uses a single quoted arg vs separate words, (2) auto_execute assertion is overly permissive, (3) two-pass parsing doesn't support flags-before-subcommand ordering. None are blocking."
+}
