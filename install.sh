@@ -33,7 +33,7 @@ fi
 echo -e "  ${GREEN}✓${NC} Python $PY_VERSION"
 
 # ── Install vox ──────────────────────────────────────────────────────────────
-REPO="https://github.com/aryateja2106/vox.git"
+REPO="https://github.com/nl2shell/vox.git"
 
 if command -v pipx &>/dev/null; then
     echo -e "  ${DIM}Installing with pipx...${NC}"

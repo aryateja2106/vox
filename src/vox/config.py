@@ -48,12 +48,19 @@ CONFIG_TEMPLATE = """\
 # theme = "monokai"
 # confirm_before_run = true
 # speak_responses = false
+
+[learning]
+# enabled = true
+# db_path = ""               # default: ~/.config/vox/knowledge.db
+# auto_learn = true           # save successful commands automatically
+# min_confidence = 0.9        # threshold to use cached patterns
+# min_success_count = 3       # minimum successes before trusting a pattern
 """
 
 
 @dataclass
 class ModelConfig:
-    name: str = "qwen2.5-coder:0.5b"
+    name: str = "nl2shell"
     provider: str = "ollama"
     api_url: str = "http://localhost:11434"
     temperature: float = 0.1
@@ -86,11 +93,21 @@ class UIConfig:
 
 
 @dataclass
+class LearningConfig:
+    enabled: bool = True
+    db_path: str = ""
+    auto_learn: bool = True
+    min_confidence: float = 0.9
+    min_success_count: int = 3
+
+
+@dataclass
 class VoxConfig:
     model: ModelConfig = field(default_factory=ModelConfig)
     voice: VoiceConfig = field(default_factory=VoiceConfig)
     agents: AgentsConfig = field(default_factory=AgentsConfig)
     ui: UIConfig = field(default_factory=UIConfig)
+    learning: LearningConfig = field(default_factory=LearningConfig)
 
 
 def _apply_env_overrides(cfg: VoxConfig) -> None:
@@ -109,6 +126,11 @@ def _apply_env_overrides(cfg: VoxConfig) -> None:
         "VOX_THEME": ("ui", "theme"),
         "VOX_CONFIRM": ("ui", "confirm_before_run"),
         "VOX_SPEAK": ("ui", "speak_responses"),
+        "VOX_LEARNING": ("learning", "enabled"),
+        "VOX_LEARNING_DB": ("learning", "db_path"),
+        "VOX_AUTO_LEARN": ("learning", "auto_learn"),
+        "VOX_MIN_CONFIDENCE": ("learning", "min_confidence"),
+        "VOX_MIN_SUCCESS_COUNT": ("learning", "min_success_count"),
     }
     for env_key, (section, attr) in env_map.items():
         val = os.environ.get(env_key)
@@ -156,6 +178,7 @@ def _apply_toml(cfg: VoxConfig, data: dict[str, Any]) -> None:
         "voice": cfg.voice,
         "agents": cfg.agents,
         "ui": cfg.ui,
+        "learning": cfg.learning,
     }
     for section_name, section_obj in section_map.items():
         section_data = data.get(section_name)

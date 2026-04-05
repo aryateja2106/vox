@@ -1,7 +1,7 @@
 [project]
 name = "vox-shell"
-version = "0.3.0"
-description = "Personal terminal agent. Voice, AI agents, and natural language to shell — all local."
+version = "0.4.0"
+description = "Self-learning terminal agent. Voice, AI agents, and natural language to shell — all local."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -44,9 +44,9 @@ prerelease = "if-necessary-or-explicit"
 vox = "vox.cli:main"
 
 [project.urls]
-Homepage = "https://aryateja2106.github.io/vox"
-Repository = "https://github.com/aryateja2106/vox"
-Issues = "https://github.com/aryateja2106/vox/issues"
+Homepage = "https://nl2shell.github.io/vox"
+Repository = "https://github.com/nl2shell/vox"
+Issues = "https://github.com/nl2shell/vox/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -75,4 +75,5 @@ allowed-unresolved-imports = [
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "ruff>=0.15.9",
 ]

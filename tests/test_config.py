@@ -14,7 +14,7 @@ from vox.config import (
 
 def test_default_config():
     cfg = VoxConfig()
-    assert cfg.model.name == "qwen2.5-coder:0.5b"
+    assert cfg.model.name == "nl2shell"
     assert cfg.model.provider == "ollama"
     assert cfg.model.api_url == "http://localhost:11434"
     assert cfg.model.temperature == 0.1
@@ -56,7 +56,7 @@ def test_apply_toml():
 
 def test_load_config_no_file():
     cfg = load_config(Path("/nonexistent/config.toml"))
-    assert cfg.model.name == "qwen2.5-coder:0.5b"
+    assert cfg.model.name == "nl2shell"
 
 
 def test_config_template_is_valid_toml():

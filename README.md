@@ -13,7 +13,7 @@ vox > find all python files bigger than 1MB
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nl2shell/vox/main/install.sh | bash
 ```
 
 **Requirements:** Python 3.9+, [Ollama](https://ollama.ai) for local inference.
@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/install.sh | 
 ## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aryateja2106/vox/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nl2shell/vox/main/uninstall.sh | bash
 ```
 
 ## Usage
@@ -106,7 +106,7 @@ Vox is a step toward a world where the terminal understands you — not the othe
 
 ## Model
 
-Vox is powered by [NL2Shell](https://github.com/aryateja2106/nl2shell), a fine-tuned Qwen3.5-0.8B model trained specifically for natural language to shell command translation.
+Vox is powered by [NL2Shell](https://github.com/nl2shell/nl2shell), a fine-tuned Qwen3.5-0.8B model trained specifically for natural language to shell command translation.
 
 - **Parameters:** ~859M (runs on CPU, no GPU needed)
 - **Training data:** 12,000+ deduplicated NL→bash pairs including 960+ expert-curated commands
@@ -118,7 +118,7 @@ You can also use any other Ollama model: `vox --model llama3.2`
 ## Contributing
 
 ```bash
-git clone https://github.com/aryateja2106/vox.git
+git clone https://github.com/nl2shell/vox.git
 cd vox
 uv sync
 uv run python -m vox

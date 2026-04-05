@@ -21,7 +21,6 @@ from vox.engine import (
     translate,
 )
 
-
 # ---------------------------------------------------------------------------
 # VAL-PROV-001: BaseProvider is abstract
 # ---------------------------------------------------------------------------
@@ -34,14 +33,13 @@ def test_base_provider_is_abstract():
     assert issubclass(BaseProvider, abc.ABC)
     try:
         BaseProvider()
-        assert False, "Should have raised TypeError"
+        raise AssertionError("Should have raised TypeError")
     except TypeError:
         pass
 
 
 def test_base_provider_has_abstract_methods():
     """BaseProvider declares abstract methods: translate, query, check."""
-    import abc
 
     # Collect abstract method names from the ABC
     abstracts = set()
@@ -246,7 +244,7 @@ def test_check_ready(mock_get):
     """check() returns 'ready' when model is found in /api/tags."""
     mock_resp = MagicMock()
     mock_resp.json.return_value = {
-        "models": [{"name": "qwen2.5-coder:0.5b"}]
+        "models": [{"name": "nl2shell"}]
     }
     mock_resp.raise_for_status = MagicMock()
     mock_get.return_value = mock_resp
@@ -300,7 +298,7 @@ def test_get_provider_unknown_raises():
     cfg.model.provider = "unknown_provider"
     try:
         get_provider(cfg)
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "unknown_provider" in str(e)
 
@@ -335,7 +333,7 @@ def test_module_translate_delegates_to_provider(mock_post):
 def test_module_check_ollama_delegates(mock_get):
     """Module-level check_ollama() works as backward-compatible wrapper."""
     mock_resp = MagicMock()
-    mock_resp.json.return_value = {"models": [{"name": "qwen2.5-coder:0.5b"}]}
+    mock_resp.json.return_value = {"models": [{"name": "nl2shell"}]}
     mock_resp.raise_for_status = MagicMock()
     mock_get.return_value = mock_resp
 
@@ -362,7 +360,7 @@ def test_config_provider_setting_affects_factory():
     cfg2.model.provider = "future_provider"
     try:
         get_provider(cfg2)
-        assert False, "Should have raised ValueError for unknown provider"
+        raise AssertionError("Should have raised ValueError for unknown provider")
     except ValueError:
         pass
 
@@ -377,6 +375,6 @@ def test_utilities_unchanged():
     assert isinstance(SYSTEM_PROMPT, str)
     assert "{platform}" in SYSTEM_PROMPT
     assert isinstance(DEFAULT_MODEL, str)
-    assert "coder" in DEFAULT_MODEL
+    assert "nl2shell" in DEFAULT_MODEL
     assert isinstance(DEFAULT_API_URL, str)
     assert DEFAULT_API_URL.startswith("http")
