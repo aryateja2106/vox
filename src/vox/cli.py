@@ -5,10 +5,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import os
-import re
 import readline
-import shlex
-import subprocess
 import sys
 from pathlib import Path
 
@@ -18,6 +15,16 @@ from rich.text import Text
 
 from vox import __version__
 from vox.config import CONFIG_FILE, VoxConfig, init_config, load_config
+from vox.executor import copy_to_clipboard, execute_command
+from vox.safety import is_dangerous, looks_like_shell
+
+# Re-export for backward compatibility (tests import these from vox.cli)
+__all__ = [
+    "copy_to_clipboard",
+    "execute_command",
+    "is_dangerous",
+    "looks_like_shell",
+]
 
 HISTORY_FILE = Path.home() / ".vox_history"
 
@@ -35,43 +42,6 @@ def setup_history() -> None:
 
 console = Console()
 
-DANGEROUS_PATTERNS = [
-    r"\brm\s+.*-\w*[rf]\w*",
-    r"\brm\s+-\w*R",
-    r"\bsudo\b",
-    r"\bdd\b\s+if=",
-    r"\bmkfs\b",
-    r"\bshred\b",
-    r"\bwipefs\b",
-    r"\b:\(\)\s*\{",
-    r"\bchmod\s+777\b",
-    r">\s*/dev/sd[a-z]",
-    r"\bsystemctl\s+(stop|disable|mask)\b",
-    r"\bkillall\b",
-    r"\breboot\b",
-    r"\bshutdown\b",
-    r"\bpoweroff\b",
-]
-
-NON_SHELL_PATTERNS = [
-    r"^\s*import\s+",
-    r"^\s*from\s+\w+\s+import\b",
-    r"^\s*def\s+\w+\(",
-    r"^\s*class\s+\w+",
-    r"^\s*<\?php",
-    r"^\s*<html",
-    r"^\s*\{\"",
-]
-
-
-def is_dangerous(cmd: str) -> bool:
-    return any(re.search(p, cmd, re.IGNORECASE) for p in DANGEROUS_PATTERNS)
-
-
-def looks_like_shell(cmd: str) -> bool:
-    first_line = cmd.split("\n")[0] if cmd else ""
-    return not any(re.search(p, first_line) for p in NON_SHELL_PATTERNS)
-
 
 def print_command(cmd: str, dangerous: bool = False) -> None:
     console.print()
@@ -85,47 +55,27 @@ def print_command(cmd: str, dangerous: bool = False) -> None:
         console.print("  [yellow]Note: multi-line command.[/yellow]")
 
 
-def execute_command(cmd: str) -> int:
-    needs_shell = any(c in cmd for c in "|;&$`()<>")
-    try:
-        if needs_shell:
-            result = subprocess.run(cmd, shell=True, check=False)
-        else:
-            result = subprocess.run(shlex.split(cmd), check=False)
-        return result.returncode
-    except ValueError:
-        result = subprocess.run(cmd, shell=True, check=False)
-        return result.returncode
-    except FileNotFoundError:
-        console.print(f"  [red]Command not found: {cmd.split()[0]}[/red]")
-        return 127
-    except KeyboardInterrupt:
-        console.print("\n[dim][interrupted][/dim]")
-        return 130
+def _get_knowledge(cfg: VoxConfig):
+    """Get the knowledge store singleton (lazy init)."""
+    if not cfg.learning.enabled:
+        return None
+    from pathlib import Path
 
+    from vox.knowledge import KnowledgeStore
 
-def copy_to_clipboard(text: str) -> bool:
-    try:
-        if sys.platform == "darwin":
-            subprocess.run(["pbcopy"], input=text.encode(), check=True)
-        else:
-            subprocess.run(
-                ["xclip", "-selection", "clipboard"],
-                input=text.encode(),
-                check=True,
-            )
-        return True
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return False
+    db_path = Path(cfg.learning.db_path) if cfg.learning.db_path else None
+    return KnowledgeStore(db_path=db_path)
 
 
 def prompt_action(cmd: str) -> str:
     try:
-        choice = console.input("  [dim]Run it?[/dim] [bold]\\[Y/n/c][/bold] ").strip().lower()
+        choice = console.input("  [dim]Run it?[/dim] [bold]\\[Y/n/c/e][/bold] ").strip().lower()
         if choice in ("", "y", "yes"):
             return "run"
         if choice in ("c", "copy"):
             return "copy"
+        if choice in ("e", "edit"):
+            return "edit"
         return "skip"
     except (KeyboardInterrupt, EOFError):
         return "skip"
@@ -136,14 +86,28 @@ def handle_command(query: str, cfg: VoxConfig, auto_execute: bool = False) -> No
         console.print("  [yellow]Query too long. Try a shorter description.[/yellow]\n")
         return
 
-    from vox.engine import translate
+    knowledge = _get_knowledge(cfg)
+    cwd = os.getcwd()
+    from_cache = False
 
-    try:
-        with console.status("[dim]Thinking...[/dim]", spinner="dots"):
-            cmd = translate(query, cfg)
-    except KeyboardInterrupt:
-        console.print("\n  [dim]Cancelled.[/dim]\n")
-        return
+    # Check learned patterns first (skip LLM if high-confidence match)
+    if knowledge and cfg.learning.auto_learn:
+        matches = knowledge.find_pattern(query, cwd=cwd)
+        if matches:
+            top = matches[0]
+            if top.confidence >= cfg.learning.min_confidence and top.success_count >= cfg.learning.min_success_count:
+                cmd = top.command
+                from_cache = True
+
+    if not from_cache:
+        from vox.engine import translate
+
+        try:
+            with console.status("[dim]Thinking...[/dim]", spinner="dots"):
+                cmd = translate(query, cfg, knowledge=knowledge, cwd=cwd)
+        except KeyboardInterrupt:
+            console.print("\n  [dim]Cancelled.[/dim]\n")
+            return
 
     if not cmd:
         console.print("  [red]Could not translate. Try rephrasing.[/red]\n")
@@ -154,12 +118,16 @@ def handle_command(query: str, cfg: VoxConfig, auto_execute: bool = False) -> No
         return
 
     dangerous = is_dangerous(cmd)
+    if from_cache:
+        console.print("\n  [dim cyan][learned][/dim cyan]")
     print_command(cmd, dangerous=dangerous)
 
     if auto_execute and not dangerous:
         rc = execute_command(cmd)
         if rc != 0:
             console.print(f"  [dim]exit {rc}[/dim]")
+        else:
+            _learn_success(knowledge, query, cmd, cwd)
         console.print()
         return
 
@@ -174,7 +142,27 @@ def handle_command(query: str, cfg: VoxConfig, auto_execute: bool = False) -> No
         rc = execute_command(cmd)
         if rc != 0:
             console.print(f"  [dim]exit {rc}[/dim]")
+            _learn_error(knowledge, cmd, cwd)
+        else:
+            _learn_success(knowledge, query, cmd, cwd)
         console.print()
+    elif action == "edit":
+        try:
+            corrected = console.input("  [dim]Correct command:[/dim] ").strip()
+        except (KeyboardInterrupt, EOFError):
+            corrected = ""
+        if corrected:
+            if knowledge:
+                knowledge.save_correction(query, cmd, corrected)
+                console.print("  [green]Saved correction.[/green]")
+            print_command(corrected, dangerous=is_dangerous(corrected))
+            action2 = prompt_action(corrected)
+            if action2 == "run":
+                console.print()
+                execute_command(corrected)
+                console.print()
+        else:
+            console.print()
     elif action == "copy":
         if copy_to_clipboard(cmd):
             console.print("  [green]Copied to clipboard.[/green]\n")
@@ -182,6 +170,21 @@ def handle_command(query: str, cfg: VoxConfig, auto_execute: bool = False) -> No
             console.print(f"  [dim]{cmd}[/dim]\n")
     else:
         console.print()
+
+
+def _learn_success(knowledge, query: str, cmd: str, cwd: str) -> None:
+    """Save a successful command to the knowledge store."""
+    if knowledge:
+        import sys
+
+        os_name = "macOS" if sys.platform == "darwin" else "Linux"
+        knowledge.save_pattern(query, cmd, cwd, os_name)
+
+
+def _learn_error(knowledge, cmd: str, cwd: str) -> None:
+    """Save a failed command to the knowledge store."""
+    if knowledge:
+        knowledge.save_error(cmd, "", cwd)
 
 
 # ── REPL ─────────────────────────────────────────────────────────────────────
@@ -200,7 +203,7 @@ def repl(cfg: VoxConfig) -> None:
         )
     )
     console.print("[dim]Type what you want to do. Ctrl+C to exit.[/dim]")
-    console.print("[dim]  !listen — voice input  |  !agent <task> — delegate to agent[/dim]")
+    console.print("[dim]  !listen — voice  |  !agent <task> — delegate  |  !learn — show patterns[/dim]")
 
     model = cfg.model.name
     status = check_ollama(cfg)
@@ -408,6 +411,47 @@ def cmd_config(args: argparse.Namespace, _cfg: VoxConfig) -> None:
         console.print("[dim]Usage: vox config {init|show|edit|path}[/dim]")
 
 
+def cmd_learn(args: argparse.Namespace, cfg: VoxConfig) -> None:
+    """Manage the self-learning knowledge store."""
+    knowledge = _get_knowledge(cfg)
+    if not knowledge:
+        console.print("[yellow]Learning is disabled. Enable in config: [learning] enabled = true[/yellow]")
+        return
+
+    action = args.learn_action or "show"
+
+    if action == "show":
+        patterns = knowledge.top_patterns(limit=20)
+        if not patterns:
+            console.print("[dim]No learned patterns yet. Use vox and it will learn over time.[/dim]")
+            return
+        console.print("[bold]Top learned patterns:[/bold]\n")
+        for p in patterns:
+            console.print(f"  [cyan]{p['query']}[/cyan] → [green]{p['command']}[/green] [dim]({p['uses']} uses)[/dim]")
+    elif action == "stats":
+        stats = knowledge.stats()
+        console.print("[bold]Knowledge store stats:[/bold]\n")
+        for key, val in stats.items():
+            console.print(f"  [cyan]{key}[/cyan]: {val}")
+    elif action == "clear":
+        knowledge.clear()
+        console.print("[green]Knowledge store cleared.[/green]")
+    elif action == "export":
+        data = knowledge.export_json()
+        if args.file:
+            Path(args.file).write_text(data)
+            console.print(f"[green]Exported to {args.file}[/green]")
+        else:
+            console.print(data)
+    elif action == "import":
+        if not args.file:
+            console.print("[yellow]Usage: vox learn import --file patterns.json[/yellow]")
+            return
+        data = Path(args.file).read_text()
+        count = knowledge.import_json(data)
+        console.print(f"[green]Imported {count} patterns.[/green]")
+
+
 # ── Main entry point ─────────────────────────────────────────────────────────
 
 
@@ -464,10 +508,21 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Config action",
     )
 
+    # ── learn ─────────────────────────────────────────────────────────────
+    learn_parser = subparsers.add_parser("learn", help="Manage learned patterns")
+    learn_parser.add_argument(
+        "learn_action",
+        nargs="?",
+        choices=["show", "stats", "clear", "export", "import"],
+        default="show",
+        help="Learning action",
+    )
+    learn_parser.add_argument("--file", "-f", default=None, help="File path for export/import")
+
     return parser
 
 
-_SUBCOMMANDS = frozenset({"listen", "speak", "agent", "config"})
+_SUBCOMMANDS = frozenset({"listen", "speak", "agent", "config", "learn"})
 
 
 def main() -> None:
@@ -527,6 +582,8 @@ def main() -> None:
         cmd_agent(args, cfg)
     elif args.command == "config":
         cmd_config(args, cfg)
+    elif args.command == "learn":
+        cmd_learn(args, cfg)
     elif args.query:
         query = " ".join(args.query)
         handle_command(query, cfg, auto_execute=args.execute)

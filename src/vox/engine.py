@@ -18,7 +18,7 @@ SYSTEM_PROMPT = (
     "No explanations, no markdown, no code fences, no comments. Just the raw command."
 )
 
-DEFAULT_MODEL = "qwen2.5-coder:0.5b"
+DEFAULT_MODEL = "nl2shell"
 DEFAULT_API_URL = "http://localhost:11434"
 
 
@@ -80,16 +80,24 @@ class OllamaProvider(BaseProvider):
     def __init__(self, cfg: VoxConfig) -> None:
         self._cfg = cfg
 
-    def translate(self, query: str) -> str | None:
+    def translate(self, query: str, knowledge=None, cwd: str = "") -> str | None:
         """Translate natural language to a shell command via Ollama."""
         model = self._cfg.model.name
         api_url = self._cfg.model.api_url
         platform = get_platform()
 
+        # Build context-enriched system prompt
+        system_content = SYSTEM_PROMPT.format(platform=platform)
+        if knowledge and cwd:
+            context = knowledge.get_recent_context(cwd=cwd, limit=5)
+            if context:
+                hints = "\n".join(f"  {c['query']} → {c['command']}" for c in context)
+                system_content += f"\n\nRecent successful commands in this directory:\n{hints}"
+
         payload = {
             "model": model,
             "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT.format(platform=platform)},
+                {"role": "system", "content": system_content},
                 {"role": "user", "content": query},
             ],
             "stream": False,
@@ -203,11 +211,11 @@ def _default_cfg() -> VoxConfig:
     return VoxConfig()
 
 
-def translate(query: str, cfg: VoxConfig | None = None) -> str | None:
+def translate(query: str, cfg: VoxConfig | None = None, knowledge=None, cwd: str = "") -> str | None:
     """Translate natural language to a shell command using the configured provider."""
     if cfg is None:
         cfg = _default_cfg()
-    return get_provider(cfg).translate(query)
+    return get_provider(cfg).translate(query, knowledge=knowledge, cwd=cwd)
 
 
 def query_llm(prompt: str, cfg: VoxConfig | None = None, system: str | None = None) -> str | None:

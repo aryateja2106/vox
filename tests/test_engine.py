@@ -43,4 +43,4 @@ def test_get_platform_returns_string():
 
 
 def test_default_model_is_small_coder():
-    assert "coder" in DEFAULT_MODEL or "nl2shell" in DEFAULT_MODEL
+    assert "nl2shell" in DEFAULT_MODEL or "nl2shell" in DEFAULT_MODEL

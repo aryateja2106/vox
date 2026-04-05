@@ -49,7 +49,7 @@ def test_version_flag(capsys):
             main()
         assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "0.3.0" in captured.out
+    assert "0.4.0" in captured.out
 
 
 @patch("vox.cli.cmd_listen")
@@ -401,14 +401,17 @@ def test_handle_command_too_long_query(mock_console, mock_translate):
     assert "too long" in printed.lower()
 
 
+@patch("vox.cli._get_knowledge", return_value=None)
 @patch("vox.cli.prompt_action", return_value="skip")
 @patch("vox.engine.translate", return_value="ls -la")
 @patch("vox.cli.console")
-def test_handle_command_translates_and_shows(mock_console, mock_translate, mock_prompt):
+def test_handle_command_translates_and_shows(mock_console, mock_translate, mock_prompt, mock_knowledge):
     """handle_command translates query and shows the command."""
     cfg = VoxConfig()
     handle_command("list files", cfg)
-    mock_translate.assert_called_once_with("list files", cfg)
+    mock_translate.assert_called_once()
+    args, _kwargs = mock_translate.call_args
+    assert args[0] == "list files"
 
 
 @patch("vox.engine.translate", return_value=None)

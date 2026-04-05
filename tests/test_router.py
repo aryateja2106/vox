@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from vox.agents.base import AgentResult
 from vox.agents.router import (
     ALL_AGENTS,
-    ROUTE_SYSTEM_PROMPT,
-    _pick_agent,
     discover_agents,
     route_and_run,
 )
 from vox.config import VoxConfig
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -346,8 +343,9 @@ class TestForceAgent:
     def test_force_agent_via_env_var(self, mock_llm, mock_discover):
         """VOX_PREFERRED_AGENT env var acts as force_agent."""
         mock_discover.return_value = _available_coding_and_research()
-        with patch.object(ALL_AGENTS[2], "run", return_value=AgentResult(agent="gemini", output="done", exit_code=0)):
-            with patch.dict("os.environ", {"VOX_PREFERRED_AGENT": "gemini"}):
+        with patch.object(ALL_AGENTS[2], "run", return_value=AgentResult(agent="gemini", output="done", exit_code=0)), patch.dict("os.environ", {"VOX_PREFERRED_AGENT": "gemini"}):
+
+
                 result = route_and_run("fix bugs everywhere", _cfg())
         mock_llm.assert_not_called()
         assert "gemini" in result
