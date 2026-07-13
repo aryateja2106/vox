@@ -29,7 +29,7 @@ voice = [
     "sounddevice>=0.4",
 ]
 finetune = [
-    "transformers>=4.40",
+    "transformers>=5.5.0",
     "peft>=0.10",
     "datasets>=2.18",
 ]
